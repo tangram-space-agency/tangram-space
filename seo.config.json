@@ -1,0 +1,25 @@
+{
+  "environments": {
+    "production": {
+      "origin": "https://tangram.space",
+      "indexable": true
+    },
+    "staging": {
+      "origin": "http://staging-tangram-space.s3-website.us-east-2.amazonaws.com",
+      "indexable": false
+    }
+  },
+  "languages": {
+    "en": { "path": "/", "hreflang": "en" },
+    "es": { "path": "/es/index.html", "hreflang": "es" },
+    "zh": { "path": "/zh/index.html", "hreflang": "zh" }
+  },
+  "xDefault": "en",
+  "ogImagePath": "/assets/images/og-cover.jpg",
+  "organization": {
+    "name": "Tangram",
+    "logoPath": "/assets/images/logo.png",
+    "email": "info@tangram.space",
+    "sameAs": ["https://www.linkedin.com/company/tangram-marketing-agency"]
+  }
+}

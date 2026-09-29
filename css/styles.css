@@ -1,0 +1,1928 @@
+/* ── Fonts ─────────────────────────────────────────────────────── */
+@font-face {
+    font-family: 'TTOctosquares';
+    src: url('../fonts/TTOctosquares-DemiBold.woff2') format('woff2'),
+         url('../fonts/TTOctosquares-DemiBold.ttf') format('truetype');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'TTOctosquares';
+    src: url('../fonts/TTOctosquares-DemiBoldItalic.woff2') format('woff2'),
+         url('../fonts/TTOctosquares-DemiBoldItalic.ttf') format('truetype');
+    font-weight: 600;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* ── Variables ──────────────────────────────────────────────────── */
+:root {
+    --bg-color:      #111111;
+    --text-main:     #F4F1EC;
+
+    /* Chamfered shape — top-left & bottom-right corners clipped */
+    --ch:            12px;   /* chamfer size for buttons */
+    --ch-lg:         36px;   /* chamfer size for cards */
+    --clip-btn:      polygon(var(--ch) 0%, 100% 0%, calc(100% - var(--ch)) 100%, 0% 100%);
+    --clip-card:     polygon(var(--ch-lg) 0%, 100% 0%, calc(100% - var(--ch-lg)) 100%, 0% 100%);
+    --text-muted:    #c0c0c0;
+    --accent:        #EE6D3E;   /* Orange — slightly brighter */
+    --accent2:       #52D5CC;   /* Teal — slightly brighter */
+    --border-color:  #3a3a3a;
+
+    --font-display: 'TTOctosquares', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    --font-main:    'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
+    --font-mono:    'SFMono-Regular', Menlo, Consolas, monospace;
+
+    /* Flat at 1280px through normal desktop widths — 78vw only
+       overtakes the floor past ~1640px, so this only grows on very
+       large screens instead of needing a separate ≥2000px rule. */
+    --container-width: clamp(1280px, 78vw, 1600px);
+    --section-padding: 80px;
+    --gap-standard: clamp(2rem, 5vw, 4rem);
+    --gutter: clamp(1.5rem, 4vw, 2.5rem);
+
+    /* Header: floor/ceiling are the two sizes the site actually used
+       (60/72px header, 36/52px logo) — now reached fluidly instead of
+       jumping at 480px and 768px. */
+    --header-height: clamp(60px, 8vw, 72px);
+    --logo-height: clamp(36px, 5.5vw, 52px);
+
+    /* Services grid: floor is the smallest card width that doesn't force
+       an awkward mid-word break in the longest service title (measured
+       ~110px for the longest single word at --font-card-title/600). See
+       .services-grid for how this caps the layout at 3 columns. */
+    --services-gap: 1.5rem;
+    --service-card-min: 260px;
+
+    /* ── Typographic system (roles, fluid mobile → desktop) ─────────
+       One clamp per role instead of a flat desktop value — floor is
+       reached around a 390px phone, ceiling around an 1100px small
+       desktop, so nothing needs a per-section or per-breakpoint
+       override to look right at any width in between. Desktop
+       ceilings are unchanged from the previous fixed values; only the
+       mobile end was designed (measured against real copy — see
+       Selected Work's title, the longest section-title on the site). */
+    --font-section:       clamp(2.1875rem, 1.75rem + 1.75vw, 2.875rem);  /* 35px → 46px — mobile floor raised from 28px, was reading too small against its own hierarchy (kicker/lead) at phone widths */
+    --font-lead:          clamp(1.2rem, 1rem + 0.7vw, 1.5rem);     /* 19.2px → 24px — floor set above --font-body's own ceiling (18px), so lead never collapses to body's size at mobile like it did at 1rem */
+    --font-body:          clamp(1rem, 0.9rem + 0.5vw, 1.125rem);   /* 16px → 18px */
+    --font-body-sm:       1rem;      /* 16px */
+    --font-kicker:        clamp(0.75rem, 0.6rem + 0.6vw, 1rem);    /* 12px → 16px */
+    --font-meta:          0.75rem;   /* 12px */
+    --font-card-title:    1.125rem;  /* 18px */
+    --font-button:        1rem;      /* 16px — 13px +20% */
+
+    /* Team & Network's country/city card labels — one closed value,
+       not a size that floats with --font-meta or varies by card type,
+       breakpoint or active state. See .team-location-label. */
+    --type-team-location: 1rem;      /* 16px */
+
+    --lh-tight:  1.05;
+    --lh-title:  1.15;
+    --lh-lead:   1.4;
+    --lh-body:   1.65;
+    --lh-ui:     1.35;
+
+    --ls-title:  -0.02em;
+    --ls-kicker: 0.15em;
+    --ls-meta:   0.1em;
+}
+
+/* ── Reset ──────────────────────────────────────────────────────── */
+*, *::before, *::after {
+    margin: 0; padding: 0;
+    box-sizing: border-box;
+    -webkit-font-smoothing: antialiased;
+}
+
+html { scroll-behavior: smooth; overflow-x: hidden; }
+body { overflow-x: hidden; }
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    font-family: var(--font-main);
+    font-size: var(--font-body); /* 18px — sitewide base, not a 4K-only bump */
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+/* ── Utilities ──────────────────────────────────────────────────── */
+.container {
+    max-width: var(--container-width);
+    margin: 0 auto;
+    padding: 0 var(--gutter);
+}
+
+.section-padding {
+    padding-top: var(--section-padding);
+    padding-bottom: var(--section-padding);
+    border-bottom: 1px solid var(--border-color);
+    position: relative;
+    z-index: 1;
+    background-color: var(--bg-color);
+}
+
+.text-secondary { color: var(--text-muted); }
+.text-accent    { color: var(--accent); }
+.text-orange    { color: var(--accent); }
+.text-teal      { color: var(--accent2); }
+
+.accent-orange  { color: var(--accent);  font-style: normal; }
+
+.grid-layout {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: var(--gap-standard);
+}
+
+/* ── Section pattern: kicker → title → lead ──────────────────────
+   One rule for every kicker in the site — Hero, About, Services,
+   Team, Selected Work, Lab, Method. Same class, same look, always
+   led by the accent diamond. Do not create a per-section variant. */
+.section-kicker {
+    display: flex;
+    /* baseline, not center: when the label wraps to 2 lines on a
+       narrow viewport, center vertically-centers the diamond against
+       the whole multi-line block, which reads as the diamond
+       floating between the lines rather than leading the first one. */
+    align-items: baseline;
+    gap: 0.6rem;
+    font-size: var(--font-kicker);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--ls-kicker);
+    color: var(--accent);
+    margin-bottom: 1.62rem; /* 1.8rem -10% */
+}
+
+/* Sidebar kickers (Services, Method — the 250px column of .grid-layout)
+   align to the top of the row instead of stacking with a bottom margin. */
+.grid-layout > .section-kicker {
+    margin-bottom: 0;
+    padding-top: 0.5rem;
+}
+
+.section-title {
+    font-size: var(--font-section);
+    line-height: var(--lh-title);
+    font-weight: 600;
+    letter-spacing: var(--ls-title);
+    color: var(--text-main);
+    margin-bottom: 0.625rem; /* 10px */
+}
+
+.section-lead {
+    font-size: var(--font-lead);
+    line-height: var(--lh-lead);
+    font-weight: 400;
+    color: var(--text-muted);
+    margin-bottom: 0.625rem; /* 10px — more text follows (About, Team, Method) */
+}
+
+/* Regular paragraph copy, wherever it appears — About's second
+   paragraph, Method's intro, and anywhere else that just needs
+   body text (not a lead, not a kicker). */
+/* .body is always the last line of running text before something
+   structurally different (a credit line, a list, a gallery) — so it
+   uses the "leaving the text stack" gap (26px, same as kicker→title),
+   not the tighter text-to-text one. */
+.body {
+    font-size: var(--font-body);
+    line-height: var(--lh-body);
+    font-weight: 400;
+    color: var(--text-muted);
+    margin-bottom: 1.625rem; /* 26px — same as kicker's gap */
+    /* No max-width: a reading-measure cap here (65ch, then 52rem) kept
+       reading as a stray margin next to a full-width title/lead rather
+       than a deliberate choice — .body now composes at the same width
+       as every other role in the section, title/lead included. */
+}
+
+a { color: inherit; text-decoration: none; transition: color 0.2s ease; }
+a:hover { color: var(--accent); }
+
+/* ── Header / Nav ───────────────────────────────────────────────── */
+.site-header {
+    position: fixed;
+    top: 0; left: 0; width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--gutter);
+    height: var(--header-height);
+    z-index: 100;
+    background-color: rgba(10, 10, 10, 0.97);
+    border-bottom: 1px solid var(--border-color);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+}
+
+.logo { display: flex; align-items: center; }
+.logo img { height: var(--logo-height); width: auto; display: block; }
+
+/* Centering the globe on the viewport (not on the leftover space
+   between logo and lang controls) needs a container that's actually
+   full-header-width — .nav-main previously centered its own
+   shrink-to-fit box (left:50% + translateX(-50%)), which only puts
+   the GLOBE at the viewport's center when the link groups on either
+   side of it happen to be equal width. They aren't (different label
+   lengths per language), so the globe drifted. A 3-column grid
+   (link group | globe | link group) spanning the header's full width
+   guarantees the middle (auto-sized) column sits exactly at that
+   width's midpoint — i.e. the viewport's center — regardless of how
+   the two label groups' widths compare, and it stays correct as the
+   window resizes without any measured/hardcoded offset.
+   left:0/right:0 (not the old left:50%) is what gives the grid a real
+   full-width box to divide into 1fr/auto/1fr — pointer-events:none
+   keeps that now much wider (mostly empty) box from intercepting
+   clicks meant for the logo or the lang switcher; .nav-link restores
+   it on the actual interactive items. */
+.nav-main {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    column-gap: 2.5rem;
+    position: absolute;
+    left: 0;
+    right: 0;
+    pointer-events: none;
+}
+.nav-main-side {
+    display: flex;
+    align-items: center;
+    gap: 2.5rem;
+    pointer-events: none;
+}
+.nav-main-side:first-child { justify-content: flex-end; }
+.nav-main-side:last-child  { justify-content: flex-start; }
+
+.nav-link {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--text-muted);
+    font-weight: 500;
+    transition: color 0.2s;
+    pointer-events: auto; /* re-enable — see .nav-main's pointer-events:none */
+}
+.nav-link:hover { color: var(--accent2); }
+
+/* Active section indicator — Tangram green */
+.nav-link.active { color: var(--accent2); }
+.nav-link.active:hover { color: var(--accent2); }
+
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.nav-lang-group {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.nav-lang-sep   { color: var(--border-color); }
+.nav-lang-active { color: var(--text-main); font-weight: 600; }
+.nav-lang-item  { color: var(--text-muted); transition: color 0.2s; }
+.nav-lang-item:hover { color: var(--text-main); }
+
+/* ── Hero ───────────────────────────────────────────────────────── */
+.hero {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding-top: var(--header-height);
+    position: relative;
+    background-color: transparent; /* canvas fixed behind shows through */
+}
+
+#hero-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    z-index: 0;
+    will-change: opacity;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+}
+
+/* Hero content — flush left, NOT centered */
+.hero .container {
+    width: 100%; /* flex child must stretch to full width before max-width kicks in */
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    padding-top: 3rem;
+    padding-bottom: 6rem;
+    /* Note: z-index:2 > canvas z-index:0 so text renders on top of canvas */
+}
+
+/* Kicker is a direct child of the full-width .hero-content, so it
+   uses the sitewide left-aligned kicker language untouched — same
+   edge as About/Team/Selected Work/Lab. Everything below it (title,
+   lead, CTAs, location row) lives in .hero-content-inner instead,
+   which is what actually centers as its own column. */
+.hero-content-inner {
+    /* Capped and centered so the whole composition reads as centered
+       inside the (much wider) sitewide .container, instead of flush
+       against its left edge. A max-width (not width:fit-content) so
+       it can never force an overflow at narrow viewports: harmless
+       no-op below 72rem.
+       72rem, not a round/arbitrary guess: measured DOM width of H1
+       line 2 ("need things done.") at the font's 8.5rem clamp
+       ceiling is ~1089px — this is the smallest cap that clears that
+       with headroom, so centering the column never fights the
+       title's own auto-shrink (see .hero-title, main.js). */
+    max-width: 72rem;
+    margin-inline: auto;
+}
+
+.hero-title,
+.hero-content .section-lead {
+    text-align: center;
+}
+
+/* The ◆ glyph's own baseline sits noticeably below its visual mass, so
+   flush baseline alignment with the kicker's uppercase text (no
+   descenders) reads as the diamond hanging low. A small optical nudge
+   fixes it without disturbing the 2-line-wrap-safe baseline alignment
+   the kicker itself relies on (see .section-kicker). */
+.eyebrow-diamond { font-size: 0.75rem; transform: translateY(-0.1em); }
+
+.hero-title {
+    font-weight: 700;
+    /* Sole source of truth for this size — no breakpoint overrides.
+       main.js still shrinks it further, inline, only when the measured
+       line-1 text would overflow its box (see the IIFE near the bottom
+       of main.js); that logic resets to this clamp on every resize. */
+    font-size: clamp(3.2rem, 7.5vw, 8.5rem);
+    line-height: var(--lh-tight);
+    letter-spacing: -0.03em;
+    color: var(--text-main);
+    margin-bottom: 2.25rem; /* 2.5rem -10% */
+}
+
+/* Disclosed exception: Hero already has its own rhythm (bigger H1,
+   its own CTA row), so title→lead and lead→button are kept equal at
+   this section's own value instead of the sitewide --lh margin. */
+.hero-content .section-lead {
+    margin-bottom: 2.25rem; /* 2.5rem -10%, matches .hero-title above */
+}
+
+.hero-ctas {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-bottom: 3.5rem;
+}
+/* Flex's default min-width:auto still lets a button's label wrap at a
+   space under moderate squeeze — well before the row actually runs out
+   of room. Pinning both to their natural width makes the 680px
+   breakpoint below the real crossover, not just an approximation. */
+.hero-ctas > a { flex-shrink: 0; }
+
+/* Hero's secondary CTA has no other instance on the site yet — it
+   still gets its own class, but sized to match .btn-primary so the
+   pair reads as one family. */
+.btn-hero-secondary {
+    font-size: var(--font-button);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--ls-kicker);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    padding: 1.1rem 3rem;
+    transition: border-color 0.2s, color 0.2s, clip-path 0.2s;
+    display: inline-block;
+    clip-path: var(--clip-btn);
+}
+.btn-hero-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── Credit line ────────────────────────────────────────────────
+   Shared role for small, muted, uppercase attribution text: the
+   Hero's location list and the About director credit both use it.
+   This class carries the typography; each usage keeps its own
+   layout rules (flex row here, border/spacing there). */
+.credit-line {
+    font-size: 1rem;   /* 16px */
+    text-transform: uppercase;
+    letter-spacing: var(--ls-meta);
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.hero-locations {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 0.8rem;
+    text-decoration: none;
+    transition: color 0.2s;
+    flex-wrap: wrap;
+}
+.hero-locations:hover { color: var(--text-main); }
+
+/* A "·" character stays a faint speck no matter the font-size — it
+   doesn't fill its own box. Drawing it as an actual shape (same
+   technique as .city-dot) is the only way to make it read as a
+   visible mark. Small and in the muted/border tone so it reads as a
+   divider, not a marker competing with the accent-colored UI. */
+.loc-sep {
+    display: inline-block;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    opacity: 0.5;
+    flex-shrink: 0;
+}
+
+/* Below this, a wrapped flex row (even one built from real per-country
+   units) starts leaving ragged, unequal gaps between lines — a real
+   grid replaces it instead of trying to coax flex-wrap into looking
+   like one. */
+@media (max-width: 600px) {
+    .hero-locations {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        justify-content: normal;
+        row-gap: 0.7rem;
+        column-gap: 1rem;
+    }
+    /* The countries are now standalone grid cells (the separators are
+       siblings, not nested inside them) — a "between two countries"
+       divider has no equivalent in a 2-column grid, so it's dropped
+       here rather than landing as a stray 7th/9th/... cell. */
+    .loc-sep {
+        display: none;
+    }
+}
+
+.hero-scroll-hint {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    text-decoration: none;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+}
+.hero-scroll-hint.visible { opacity: 1; }
+.hero-scroll-hint:hover .scroll-chevron { border-color: var(--text-main); }
+.scroll-chevron {
+    display: block;
+    width: 14px;
+    height: 14px;
+    border-right: 1.5px solid rgba(255,255,255,0.45);
+    border-bottom: 1.5px solid rgba(255,255,255,0.45);
+    transform: rotate(45deg) translateY(-3px);
+    animation: scroll-bounce 1.8s ease-in-out infinite;
+    transition: border-color 0.2s;
+}
+@keyframes scroll-bounce {
+    0%, 100% { transform: rotate(45deg) translate(0, -3px); opacity: 0.5; }
+    50%       { transform: rotate(45deg) translate(4px,  1px); opacity: 1; }
+}
+
+/* canvas pointer-events:none so mouse passes through to hero content */
+/* pointer-events: none already set in main #hero-canvas rule above */
+
+/* ── About ──────────────────────────────────────────────────────── */
+.about {
+    position: relative;
+    overflow: hidden;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* No photo/overlay layer here — About's background is the dot-grid
+   canvas main.js draws behind the whole section (see .services-grid
+   comment below). about-bg.jpg lives only on chevy.html now; the
+   Hero → About transition comes from the Hero network fading out as
+   it leaves the viewport while the dots are already visible on entry
+   — no separate transition image needed. */
+.about-grid {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 1fr;
+    /* About text, the services grid and the director credit are now
+       three stacked blocks in one combined section (no more separate
+       .services section of its own) — reuse the sitewide block-gap
+       token instead of inventing a one-off value. */
+    gap: var(--gap-standard);
+}
+
+
+/* ── Services (cards now live inside the combined #about section;
+   the dot-grid canvas that used to be this section's own background
+   is now #about's — see the "Services dot grid" block in main.js) ── */
+/* Caps at 3 columns without a media query: minmax()'s floor is always
+   at least one-third of the row (the `(100% - 2*gap)/3` term), so
+   auto-fit can never squeeze in a 4th. Below that, the floor falls
+   back to --service-card-min (260px) — the smallest card width that
+   still fits the longest service title on ~2 lines without breaking a
+   word mid-way — and columns drop to 2, then 1, purely from real
+   available width. No breakpoint number is declared anywhere. */
+.services-grid {
+    display: grid;
+    grid-template-columns: repeat(
+        auto-fit,
+        minmax(max(var(--service-card-min), (100% - 2 * var(--services-gap)) / 3), 1fr)
+    );
+    gap: var(--services-gap);
+    width: 100%;
+}
+
+.service-card {
+    border: 1px solid var(--border-color);
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+    background-size: cover;
+    background-position: center;
+    background-color: #111;
+    transition: border-color 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    min-height: 280px;
+    clip-path: var(--clip-card);
+}
+
+.service-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.3) 55%, rgba(0,0,0,0.05) 100%);
+    transition: -webkit-backdrop-filter 0.5s ease, backdrop-filter 0.5s ease, background 0.5s ease;
+    z-index: 1;
+    pointer-events: none;
+}
+.service-card:hover::before {
+    -webkit-backdrop-filter: blur(14px) grayscale(1);
+    backdrop-filter: blur(14px) grayscale(1);
+    background: linear-gradient(to top, rgba(0,0,0,0.97) 0%, rgba(0,0,0,0.78) 55%, rgba(0,0,0,0.55) 100%);
+}
+
+.card-activations-lab { background-image: url('../assets/capabilities/cap-brandactivation-image.jpg'); background-position: 50% 38%; }
+.card-events          { background-image: url('../assets/capabilities/cap-event-image.jpg');           background-position: 50% 30%; background-size: 130%; }
+.card-audiovisual     { background-image: url('../assets/capabilities/cap-audiovisual-image.jpg'); }
+.card-branding-design { background-image: url('../assets/capabilities/cap-design-image.jpg');          background-position: 50% 18%; }
+.card-experiences     { background-image: url('../assets/capabilities/cap-webexperiences-image.jpg');  background-position: 50% 25%; border-color: var(--accent); }
+.card-consulting      { background-image: url('../assets/capabilities/cap-consulting-image.jpg');       background-position: 50% 20%; }
+
+.service-card:hover { border-color: var(--accent); }
+
+.service-card h3 {
+    font-size: var(--font-card-title);
+    font-weight: 600;
+    margin-bottom: 0;
+    color: var(--text-main);
+    transition: transform 0.3s ease;
+    position: relative;
+    z-index: 2;
+}
+.service-card h3::after {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 2px;
+    background-color: var(--accent);
+    margin-top: 1rem;
+    transition: opacity 0.3s ease;
+}
+
+.service-card p {
+    color: var(--text-muted);
+    font-size: var(--font-body-sm);
+    line-height: var(--lh-body);
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+    margin-top: 0;
+    position: relative;
+    z-index: 2;
+}
+.service-card:hover p { max-height: 220px; opacity: 1; margin-top: 1rem; }
+
+/* ── Methodology ────────────────────────────────────────────────── */
+.methodology {
+    background-image: radial-gradient(rgba(255,255,255,0.13) 1px, transparent 1px);
+    background-size: 26px 26px;
+}
+[data-theme="light"] .methodology {
+    background-image: radial-gradient(rgba(0,0,0,0.10) 1px, transparent 1px);
+}
+
+/* Method's piece composition is a full-section background canvas — same treatment */
+.methodology { position: relative; background-image: none; }
+[data-theme="light"] .methodology { background-image: none; }
+
+.method-content { position: relative; z-index: 1; }
+
+/* Kicker keeps the sitewide left-aligned language and its standard
+   margin-bottom (same gap to the title as every other section) —
+   only title, lead and body center. */
+.methodology .section-title,
+.methodology .section-lead,
+.methodology .body {
+    text-align: center;
+}
+
+
+/* Text arrives on top of the piece background, once the section is in view */
+.method-reveal { opacity: 0; transform: translateY(16px); transition: opacity 0.7s ease, transform 0.7s ease; }
+.method-reveal.in { opacity: 1; transform: translateY(0); }
+
+/* ── Accordion Gallery ───────────────────────────────────────────── */
+.ag-gallery {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    width: 100%;
+    height: 460px;
+    perspective: 1400px;
+    perspective-origin: 50% 50%;
+    /* `perspective` blocks margin collapse with the next sibling (unlike
+       plain block boxes), so this margin ADDS to whatever follows it
+       instead of taking the max. Kept at the "leaving a text block" tier
+       (26px) since Lab has nothing after its gallery but this margin. */
+    margin-bottom: 1.625rem;
+}
+
+.ag-panel {
+    position: relative;
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+    border-radius: 10px;
+    cursor: pointer;
+    display: block;
+    text-decoration: none;
+    outline: none;
+    transform-style: preserve-3d;
+    transform-origin: center center;
+    background: #0a0a0a;
+    transition: flex-grow 0.6s cubic-bezier(0.16,1,0.3,1),
+                transform  0.6s cubic-bezier(0.16,1,0.3,1);
+    will-change: flex-grow, transform;
+}
+
+/* flex-grow on active is set dynamically in JS based on panel count */
+
+.ag-panel:focus-visible { box-shadow: 0 0 0 2px var(--accent); }
+
+.ag-frame {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: inherit;
+}
+
+.ag-media {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 100%; height: 100%;
+    transform: translate(-50%, -50%);
+    filter: grayscale(1) brightness(1.0) contrast(1.15);
+    transition: filter 0.6s cubic-bezier(0.16,1,0.3,1);
+    will-change: filter;
+}
+
+.ag-panel--active .ag-media { filter: grayscale(0) brightness(1); }
+
+.ag-media img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+/* Per-project focal point for the mobile accordion (342×144 active,
+   342×48 collapsed — a much wider/shorter box than these portrait
+   source photos). Every panel keeps the same full-bleed composition
+   (object-fit: cover, inherited above) — only object-position moves,
+   simulated against the real object-fit:cover math per source image,
+   not eyeballed on the live page. Filename-keyed so it applies
+   identically across en/es/zh without per-language markup. Bitcoin
+   Conference and Card & Pay Launch center-crop correctly and are left
+   alone. */
+.ag-media img[src*="volvo.jpg"]            { object-position: 50% 35%; } /* keeps the full drummer trio's faces; default center cut the lead drummer through the eyes */
+.ag-media img[src*="bybit-poker.jpg"]      { object-position: 50% 35%; } /* keeps the BYBIT neon sign; default center showed only chairs, no branding */
+.ag-media img[src*="bybit-enterview.jpg"]  { object-position: 50% 30%; } /* keeps both faces; default center cropped both heads off at the neck */
+.ag-media img[src*="bybit-pizza-car.jpg"]  { object-position: 50% 82%; } /* brings the Bybit car fully into frame, higher up in the shot */
+/* Default center-crop showed too much sky above the billboards, with
+   the sharper, more legible sign sitting off to the right. Scaled up
+   20% and re-anchored toward that sign so the extra zoom crops away
+   sky/edges instead of the subject. */
+.ag-media img[src*="bybit-billboard.jpg"]  { transform: scale(1.2); transform-origin: 66% 60%; }
+
+.ag-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(180deg, transparent 38%, rgba(6,0,16,0.82) 100%);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.ag-panel--active .ag-overlay { opacity: 1; }
+
+.ag-bar {
+    flex: 0 0 auto;
+    width: 3px; height: 20px;
+    border-radius: 3px;
+    background: var(--accent);
+    opacity: 0;
+    transform: translateX(-10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.ag-panel--active .ag-bar {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+@media (max-width: 520px) {
+    .ag-gallery {
+        flex-direction: column;
+        height: 480px;
+        perspective: none;
+    }
+    .ag-panel { transform: none !important; min-height: 48px; }
+}
+
+/* Selected Work has 8 panels vs. Lab's 3. main.js splits gallery width
+   0.52 / (0.48 ÷ 7 rest) between the active panel and each inactive
+   sliver — at 8 panels that's ~6% of the gallery per inactive panel,
+   which drops under a 44px touch target well before 520px (measured:
+   ~646px, using the row's real gutter/gap). Lab's 3-panel math (~24%
+   per inactive panel) never has this problem, so it keeps the 520px
+   cutover above and doesn't need this override.
+   Height budget: 7 collapsed panels pin to their 48px min-height floor
+   (336px) + 7×8px gaps (56px) = 392px fixed before the active panel
+   sees a single pixel — at the old 480px total that left only ~88px
+   for the active panel, not enough to render title + description
+   without clipping (confirmed live: measured 88px rendered height).
+   600px gives the active panel ~208px, enough for a 1-line title plus
+   a 3-line description with margin. Lab's own height (320px @ ≥521px,
+   480px below it) is untouched — its 3-panel math never hits this
+   floor. */
+@media (max-width: 660px) {
+    .portfolio .ag-gallery {
+        flex-direction: column;
+        height: 600px;
+        perspective: none;
+    }
+    .portfolio .ag-panel { transform: none !important; min-height: 48px; }
+}
+
+/* Stage rail — sits between the lead and the body now, at half the
+   section's own top/bottom padding (same token both sides, not an
+   arbitrary independent value) — a lighter beat than a full section
+   gap since it's breaking up a single text column, not opening or
+   closing the section. */
+.method-stages {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* nowrap on purpose: below its real content width (see the 1080px
+       rule) this switches to a column instead, so an organic wrap
+       never has to compete with that as a second, conflicting way to
+       handle the same overflow. */
+    flex-wrap: nowrap;
+    gap: 1.2rem;      /* 19.2px — 14.4px +30% */
+    margin-top: calc(var(--section-padding) / 2);
+    margin-bottom: calc(var(--section-padding) / 2);
+}
+.m-stage {
+    font-family: var(--font-display);
+    font-size: 2.25rem;   /* 36px */
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    opacity: 0.42;
+    transition: color 0.4s ease, opacity 0.4s ease;
+    white-space: nowrap;
+}
+.m-stage.lit { color: var(--accent); opacity: 1; }
+.m-stage-sep {
+    width: 36px; height: 16px; /* 28/12px +30%, rounded */
+    flex-shrink: 0;
+    display: inline-flex;
+}
+.m-stage-sep svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.m-stage-sep .sep-line {
+    fill: none;
+    stroke: var(--border-color);
+    stroke-width: 1.5;
+    stroke-dasharray: 20;
+    stroke-dashoffset: 20;
+    transition: stroke-dashoffset 0.45s ease, stroke 0.4s ease;
+}
+.m-stage-sep .sep-head {
+    fill: var(--border-color);
+    opacity: 0;
+    transform-origin: 19px 6px;
+    transform: scale(0.3);
+    transition: opacity 0.25s ease 0.3s, transform 0.3s ease 0.3s, fill 0.4s ease;
+}
+.m-stage-sep.lit .sep-line { stroke-dashoffset: 0; stroke: var(--accent); }
+.m-stage-sep.lit .sep-head { opacity: 0.85; transform: scale(1); fill: var(--accent); }
+
+/* Measured live: the row's natural width (4 words + 3 connectors at
+   their real size) is ~990px; against the fluid gutter that stops
+   fitting at ~1070px. Below that, reflow to a column instead of
+   letting the row wrap on its own — flex-wrap would leave a connector
+   dangling at the line break with nothing to point at. The sequence
+   still needs to read as one direction, so the same connector SVG is
+   reused rotated 90° (down instead of right) rather than hidden —
+   Understand → Create → Build → Deliver stays legible and animated
+   at every width below the row. */
+@media (max-width: 1080px) {
+    .method-stages {
+        flex-direction: column;
+        align-items: center;
+        flex-wrap: nowrap;
+        gap: 0.6rem;
+    }
+    .m-stage-sep {
+        width: 16px; height: 36px;
+        align-items: center;
+        justify-content: center;
+    }
+    .m-stage-sep svg {
+        width: 36px; height: 16px;
+        transform: rotate(90deg);
+    }
+}
+
+.method-values {
+    list-style: none;
+    display: flex;
+    justify-content: center;
+    gap: 2.5rem;
+    flex-wrap: wrap;
+    padding: 0;
+    counter-reset: mv;
+}
+/* Typed out like the map's terminal readout — same font, same look. */
+.method-values li {
+    font-family: var(--font-mono);
+    font-size: var(--font-body-sm);
+    color: var(--text-muted);
+    display: flex;
+    align-items: baseline;
+}
+.mv-caret {
+    display: none;
+    color: var(--accent);
+    margin-left: 2px;
+    animation: caretBlink 1.05s step-end infinite;
+}
+.method-values li.mv-typing .mv-caret { display: inline; }
+.method-values li::before {
+    counter-increment: mv;
+    content: '0' counter(mv);
+    margin-right: 0.6em;
+    color: var(--accent);
+    opacity: 1;
+}
+
+/* ── Team / Map ─────────────────────────────────────────────────── */
+.team-split {
+    display: grid;
+    grid-template-columns: 1fr 1.6fr;
+    gap: 4rem;
+    align-items: start;
+}
+
+.team-left {
+    /* Without this, an unbroken text node inside can grow past the 1fr
+       track's intrinsic size and push the map column sideways. */
+    min-width: 0;
+}
+
+/* City cards grid */
+.city-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.city-card {
+    border: 1px solid var(--border-color);
+    padding: 0.875rem 1rem;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+    background: transparent;
+}
+
+.city-card:hover,
+.city-card.active {
+    border-color: var(--accent);
+    background: rgba(236, 106, 60, 0.04);
+}
+
+.city-card[data-type="partner"]:hover,
+.city-card[data-type="partner"].active,
+.city-card[data-type="local"]:hover,
+.city-card[data-type="local"].active {
+    border-color: var(--accent2);
+    background: rgba(78, 205, 196, 0.04);
+}
+
+.city-card-name {
+    text-transform: uppercase;
+    color: var(--text-main);
+    margin-bottom: 0.25rem;
+    transition: color 0.2s ease;
+}
+
+.city-card:hover .city-card-name,
+.city-card.active .city-card-name {
+    color: var(--accent);
+}
+
+.city-card[data-type="partner"]:hover .city-card-name,
+.city-card[data-type="partner"].active .city-card-name,
+.city-card[data-type="local"]:hover .city-card-name,
+.city-card[data-type="local"].active .city-card-name {
+    color: var(--accent2);
+}
+
+/* Map container — right column */
+.team-map-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.globe-ascii {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem 0 1.5rem;
+}
+
+.globe-canvas {
+    width: clamp(260px, 38vw, 460px);
+    height: auto;
+}
+
+/* Legend now lives under the country buttons — see the v2 block below */
+
+/* Team's real responsive rules live in the v2.0.0 block further down
+   (search "Team responsive: map dominates") — that block supersedes an
+   earlier, duplicate pair of @960/@540 rules that used to live here and
+   partly contradicted it (e.g. a fixed team-map-container min-height
+   the v2 block then reset to auto in the same breakpoint). Removed
+   rather than merged: the v2 block already covers everything this one
+   did. */
+
+/* ── Portfolio CTA button ───────────────────────────────────────── */
+/* Gallery's own margin-bottom already gives the 26px gap (doesn't
+   collapse — see .ag-gallery's perspective note), so the button needs
+   none of its own here. */
+.portfolio .content > .btn-primary { margin-top: 0; }
+
+/* The one primary CTA class on the site — the Hero's "Start a
+   Project" link and every "Let's talk" button share this rule. */
+.btn-primary {
+    font-size: var(--font-button);
+    padding: 1.1rem 3rem;
+    background-color: var(--accent);
+    color: var(--bg-color);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--ls-kicker);
+    display: inline-block;
+    transition: background-color 0.3s, color 0.3s;
+    border: none;
+    cursor: pointer;
+    clip-path: var(--clip-btn);
+}
+.btn-primary:hover { background-color: #fff; color: #000; }
+
+/* ── Contact modal ──────────────────────────────────────────────── */
+.contact-modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    z-index: 500;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.22s ease;
+}
+.contact-modal-overlay.open { opacity: 1; pointer-events: all; }
+
+.contact-modal {
+    background: #161616;
+    border: 1px solid var(--border-color);
+    padding: 2.5rem 2.5rem 2rem;
+    width: min(400px, 90vw);
+    /* Same safety net as .dir-modal: a short viewport (landscape phone,
+       small laptop) can be shorter than the modal's content regardless
+       of width, so this isn't gated behind a width media query. */
+    max-height: 88vh;
+    overflow-y: auto;
+    position: relative;
+    transform: translateY(12px);
+    transition: transform 0.22s ease;
+}
+.contact-modal-overlay.open .contact-modal { transform: translateY(0); }
+
+.contact-modal-close {
+    position: absolute; top: 1rem; right: 1.25rem;
+    background: none; border: none; color: var(--text-muted);
+    font-size: 1.5rem; line-height: 1; cursor: pointer; padding: 0;
+    transition: color 0.2s;
+}
+.contact-modal-close:hover { color: var(--text-main); }
+
+.contact-modal-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.18em; color: var(--text-muted); margin-bottom: 0.4rem; }
+.contact-modal-email { font-size: 1.15rem; font-weight: 500; color: var(--accent); margin-bottom: 2rem; letter-spacing: 0.02em; }
+.contact-modal-options { display: flex; flex-direction: column; gap: 0.6rem; }
+.contact-modal-option {
+    display: flex; align-items: center; gap: 0.9rem;
+    padding: 0.9rem 1.1rem;
+    border: 1px solid var(--border-color);
+    background: transparent; color: var(--text-main);
+    text-decoration: none;
+    font-size: 0.88rem; font-weight: 400; cursor: pointer;
+    transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+    width: 100%; text-align: left; letter-spacing: 0.03em;
+}
+.contact-modal-option:hover { border-color: var(--accent); color: var(--accent); background: rgba(236,106,60,0.04); }
+.contact-modal-icon { display: flex; align-items: center; flex-shrink: 0; opacity: 0.7; }
+.contact-modal-option:hover .contact-modal-icon { opacity: 1; }
+
+/* ── Marquee ────────────────────────────────────────────────────── */
+.marquee-section { position: relative; z-index: 1; overflow: hidden; border-top: 1px solid var(--border-color); background: var(--bg-color); -webkit-mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 100%); mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 100%); }
+.nav-globe { display: flex; align-items: center; line-height: 1; }
+.marquee-row { overflow: hidden; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.marquee-row:last-child { border-bottom: none; }
+
+.marquee-track {
+    display: flex; white-space: nowrap;
+    width: max-content; min-width: 200%; padding: 0.7rem 0;
+    will-change: transform;
+}
+
+@keyframes scroll-left  { from { transform: translateX(0); }    to { transform: translateX(-50%); } }
+@keyframes scroll-right { from { transform: translateX(-50%); } to { transform: translateX(0); }    }
+.scroll-left  { animation: scroll-left  linear infinite; }
+.scroll-right { animation: scroll-right linear infinite; }
+
+/* Opacity tiers tuned to hit WCAG AA (4.5:1) against --bg-color at this
+   font-size/weight — verified per-channel, not eyeballed. Light theme
+   needs its own values below since the same opacity blends very
+   differently against a light background than a dark one. */
+.marquee-row:nth-child(1) .mq-item { opacity: 0.55; }
+.marquee-row:nth-child(2) .mq-item { opacity: 0.52; }
+.marquee-row:nth-child(3) .mq-item { color: var(--accent); opacity: 0.85; }
+.marquee-row:nth-child(4) .mq-item { opacity: 0.52; }
+.marquee-row:nth-child(5) .mq-item { opacity: 0.55; }
+
+.mq-item { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.18em; color: var(--text-main); padding: 0 1.2rem; font-weight: 500; }
+.mq-sep  { color: var(--accent); font-size: 0.72rem; opacity: 0.35; flex-shrink: 0; }
+
+@media (prefers-reduced-motion: reduce) { .marquee-track { animation-play-state: paused; } }
+
+/* ── Footer ─────────────────────────────────────────────────────── */
+.site-footer {
+    position: relative; z-index: 1;
+    /* min-height, not a fixed height: .site-footer-inner switches to a
+       stacked column at ≤768px (see its own rule) and needs more than
+       72px there. A fixed height combined with align-items:center let
+       that stacked content overflow upward, past this section's own
+       top edge, into the marquee above — an opaque background on this
+       element was never going to fix an overflow problem. */
+    min-height: 72px;
+    padding: 1.25rem 0;
+    display: flex; align-items: center;
+    background-color: var(--bg-color);
+    border-top: 1px solid var(--border-color);
+    font-size: 0.8rem; color: var(--text-muted);
+}
+.site-footer .container { width: 100%; }
+.footer-links a { margin-left: 3rem; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.75rem; }
+
+/* ── Animation utilities ────────────────────────────────────────── */
+.fade-up { opacity: 0; transform: translateY(20px); transition: opacity 0.8s ease-out, transform 0.8s ease-out; }
+.fade-up.visible { opacity: 1; transform: translateY(0); }
+
+/* Hero text entrance */
+.hero-reveal { opacity: 0; transform: translateY(22px); }
+.hero-reveal.in { transition: opacity 0.7s ease, transform 0.7s ease; opacity: 1; transform: translateY(0); }
+
+/* .hero-ctas takes ~1.7s delay + a 2.4s fade (see "Hero reveal" below,
+   desktop only) to reach full opacity. Mid-fade, the filled-orange
+   primary button's contrast drops well under WCAG AA — confirmed by
+   two separate live Lighthouse runs catching two different transient
+   colors (#2B1C16/#D06038 then #301E17/#C95E36), never the same pair
+   twice. No fixed text color can fix that: contrast trends to 1:1 as
+   opacity trends to 0 regardless of hue. Keeping this one reveal at
+   opacity 1 from first paint removes the exposure window entirely;
+   the slide-in (transform) still plays, so the entrance still reads
+   as animated. Desktop-only per spec — mobile's fade is untouched. */
+@media (min-width: 541px) {
+    .hero-ctas.hero-reveal { opacity: 1; }
+}
+
+/* ── Responsive ─────────────────────────────────────────────────── */
+/* ── Hamburger button ────────────────────────────────────────────── */
+.hamburger-btn {
+    display: none;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 22px;
+    height: 16px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+}
+.hamburger-btn .bar {
+    display: block;
+    width: 100%;
+    height: 1.5px;
+    background: var(--text-muted);
+    transition: transform 0.25s ease, opacity 0.2s ease, background-color 0.2s;
+    transform-origin: center;
+}
+.hamburger-btn:hover .bar { background: var(--text-main); }
+.site-header.nav-open .hamburger-btn .bar:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.site-header.nav-open .hamburger-btn .bar:nth-child(2) { opacity: 0; }
+.site-header.nav-open .hamburger-btn .bar:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* Measured live: logo and nav-links start colliding at ~880px with no
+   compensating layout (nav-main is centered via position:absolute, so
+   it doesn't reserve space from its siblings). 900px keeps the aired-out
+   horizontal nav all the way through narrow-desktop and most tablets. */
+@media (max-width: 900px) {
+    .nav-main { display: none; }
+    .hamburger-btn { display: flex; }
+
+    /* Mobile nav panel — slides down from header */
+    .site-header.nav-open .nav-main {
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        top: var(--header-height);
+        left: 0; right: 0;
+        background: rgba(18, 18, 18, 0.98);
+        border-bottom: 1px solid var(--border-color);
+        -webkit-backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+        padding: 1.5rem var(--gutter) 2rem;
+        gap: 0;
+        z-index: 90;
+        animation: mobile-nav-in 0.22s ease forwards;
+        pointer-events: auto;
+    }
+    /* The desktop grid needs .nav-link wrapped in .nav-main-side to
+       balance the two sides around the globe — but the mobile panel
+       stacks every link as its own full-width row (flex-direction:
+       column above), so those wrapper divs need to disappear from the
+       box tree here, promoting About/Method/Works/Lab back to being
+       direct children of .nav-main, exactly as before this change. */
+    .site-header.nav-open .nav-main-side {
+        display: contents;
+    }
+    [data-theme="light"] .site-header.nav-open .nav-main {
+        background: rgba(245, 242, 237, 0.98);
+    }
+    .site-header.nav-open .nav-link {
+        font-size: 0.8rem;
+        letter-spacing: 0.18em;
+        padding: 1rem 0;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-muted);
+        width: 100%;
+    }
+    .site-header.nav-open .nav-link:last-child { border-bottom: none; }
+    .site-header.nav-open .nav-link:hover { color: var(--accent2); }
+    .site-header.nav-open .nav-globe { display: flex; }
+}
+
+@keyframes mobile-nav-in {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 1024px) {
+    .grid-layout { grid-template-columns: 1fr; gap: 3rem; }
+}
+
+/* Measured live (both CTAs at their real desktop size — 1.1rem/3rem
+   padding, 1.5rem gap): the pair needs ~614px in the longest language
+   (ES, "Iniciar Proyecto ↗" + "Lo que hacemos"). Against the fluid
+   container gutter, available width drops below that at ~667px — this
+   is that real crossover (with a small safety margin), not the old
+   768px inherited from the section-padding breakpoint. */
+@media (max-width: 680px) {
+    .hero-ctas { flex-direction: column; align-items: flex-start; gap: 1rem; }
+    /* Full-width is the same "CTA goes mobile" moment as the stack
+       above, for every .btn-primary on the page (Hero, Portfolio,
+       Method) — kept on this breakpoint rather than 768 so a lone
+       "Let's talk" button doesn't go full-width before the Hero pair
+       has even needed to stack. */
+    .btn-primary { width: 100%; display: block; text-align: center; padding: 1.2rem; }
+}
+
+/* ── Hero mobile: fully centered composition ──────────────────────
+   H1/lead are already centered sitewide (see .hero-title,
+   .hero-content .section-lead above) — only the kicker (left-aligned
+   everywhere else on the site, see .section-kicker) and the CTA/
+   locations layout need mobile-only overrides here. Kicker is a flex
+   row (diamond + text), so text-align alone wouldn't center it as a
+   group — needs justify-content too. Placed after the 680px block
+   above (not grouped with the other hero rules near .hero-locations)
+   so it wins the cascade at ≤540px: both media queries match there,
+   and with equal specificity source order decides. */
+@media (max-width: 540px) {
+    /* Kicker stays left-aligned in mobile — same as every other
+       section's kicker (see .section-kicker) and same as the Hero's
+       own kicker in desktop. Only H1/lead/CTAs/locations center. */
+
+    /* One row, not a stack: overrides the 680px column/full-width
+       CTA behavior for the Hero pair only (scoped to .hero-ctas, so
+       Portfolio/Method/Contact keep stacking full-width as before).
+       Labels are shrunk (not just de-tracked/padded) — at the
+       desktop 16px size, even at padding:0 the two texts alone
+       measure ~335px against a ~327px available width, so fitting
+       them with real breathing room on both sides needs the label
+       itself smaller, not just tighter tracking/padding. line-height:1
+       keeps the box from growing with the shrunk text; padding-block
+       is widened instead so the button keeps a comfortable tap
+       height, and the width shrink is what actually recovers the
+       left/right air around the label — not just padding-inline. */
+    .hero-ctas {
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    .hero-ctas .btn-primary,
+    .hero-ctas .btn-hero-secondary {
+        width: auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        white-space: nowrap;
+        font-size: 11px;
+        line-height: 1;
+        letter-spacing: 0;
+        padding-inline: 0.75rem;
+        padding-block: 1.35rem;
+    }
+
+    /* Flex, not the ≤600px grid this overrides: each name gets an
+       equal third so 3 always land per row (6 items → two full rows),
+       centered as one continuous group rather than two rigid columns.
+       column-gap stays 0 — the equal thirds already read as evenly
+       spaced once each name is centered inside its own third; adding
+       a gap on top would push the 3rd item of a row to wrap. */
+    .hero-locations {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        text-align: center;
+        row-gap: 0.7rem;
+        column-gap: 0;
+    }
+    .hero-locations > span:not(.loc-sep) {
+        flex: 0 0 33.333%;
+        text-align: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .service-card { --ch-lg: 20px; padding: 1.5rem 1.5rem 1.5rem calc(var(--ch-lg) + 1rem); min-height: 280px; }
+    .service-card h3 { font-size: 1rem; overflow-wrap: break-word; }
+
+    .footer-links a { margin: 0 0.8rem; display: inline-block; }
+    img, svg { max-width: 100%; height: auto; }
+}
+
+/* ── Light / Day mode ───────────────────────────────────────────── */
+[data-theme="light"] {
+    --bg-color:     #F5F2ED;
+    --text-main:    #1a1a18;
+    --text-muted:   #6a6a66;
+    --accent:       #D95F28;
+    --accent2:      #299E97;
+    --border-color: #dedad4;
+}
+[data-theme="light"] body                 { background-color: var(--bg-color); color: var(--text-main); }
+[data-theme="light"] .site-header         { background-color: rgba(245,242,237,0.96); }
+[data-theme="light"] .contact-modal-overlay { background: rgba(180,175,165,0.80); }
+[data-theme="light"] .contact-modal       { background: #EDE9E3; border-color: var(--border-color); }
+[data-theme="light"] .contact-modal-close { color: var(--text-muted); }
+[data-theme="light"] .contact-modal-label { color: var(--text-muted); }
+[data-theme="light"] .contact-modal-email { color: var(--text-main); }
+[data-theme="light"] .contact-modal-option { background: transparent; border-color: var(--border-color); color: var(--text-main); }
+[data-theme="light"] .globe-canvas        { filter: invert(1) hue-rotate(180deg) brightness(0.85); }
+/* Marquee contrast, recalculated for the light background — the dark-theme
+   opacities above blend to well under AA here. Row 3's solid --accent
+   orange can't reach 4.5:1 against this bg at any opacity, so it gets a
+   one-off darker shade of the same hue instead of the brand variable. */
+[data-theme="light"] .marquee-row:nth-child(1) .mq-item,
+[data-theme="light"] .marquee-row:nth-child(5) .mq-item { opacity: 0.68; }
+[data-theme="light"] .marquee-row:nth-child(2) .mq-item,
+[data-theme="light"] .marquee-row:nth-child(4) .mq-item { opacity: 0.63; }
+[data-theme="light"] .marquee-row:nth-child(3) .mq-item { color: #B23F17; opacity: 1; }
+[data-theme="light"] .service-card        { background-color: rgba(220,215,205,0.35); border-color: var(--border-color); }
+/* Lighter than the dark-mode gradient (0.88/0.3/0.05) — the photos read
+   as near-black against the light page otherwise. Bottom stop stays
+   dark enough to keep the white card text legible. */
+[data-theme="light"] .service-card::before { background: linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.18) 55%, rgba(0,0,0,0.02) 100%); }
+[data-theme="light"] .service-card:hover::before { background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.55) 55%, rgba(0,0,0,0.35) 100%); }
+/* Keep card text WHITE in light mode — ::before overlay is still dark at the bottom */
+[data-theme="light"] .service-card h3     { color: #F4F1EC; }
+[data-theme="light"] .service-card p      { color: rgba(240,236,228,0.78); }
+[data-theme="light"] .city-card           { border-color: var(--border-color); background: rgba(220,215,205,0.25); }
+[data-theme="light"] .city-card.active    { background: rgba(220,215,205,0.55); }
+[data-theme="light"] .team-map-container  { background: transparent; }
+/* Logo: invert so white wordmark becomes dark on cream background */
+[data-theme="light"] .logo img            { filter: invert(1) hue-rotate(180deg); }
+/* Hero secondary button */
+[data-theme="light"] .btn-hero-secondary  { border-color: var(--border-color); color: var(--text-main); }
+/* About section */
+[data-theme="light"] .about-director      { border-top-color: var(--border-color); color: var(--text-muted); }
+
+/* ── Theme toggle button ─────────────────────────────────────────── */
+.theme-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: none;
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+    padding: 0;
+    flex-shrink: 0;
+}
+.theme-toggle:hover { color: var(--text-main); border-color: var(--text-muted); }
+.theme-toggle svg   { width: 14px; height: 14px; pointer-events: none; }
+/* show only the relevant icon */
+.icon-moon { display: block; }
+.icon-sun  { display: none; }
+[data-theme="light"] .icon-moon { display: none; }
+[data-theme="light"] .icon-sun  { display: block; }
+
+/* ── Director credit in About ────────────────────────────────────── */
+.about-director {
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+/* ── WhatsApp floating button — hidden for now; drop this line to restore ── */
+.whatsapp-float { display: none !important; }
+
+.whatsapp-float {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #25D366;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+    z-index: 150;
+    opacity: 0;
+    transform: translateY(16px);
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease, box-shadow 0.2s ease;
+}
+.whatsapp-float.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+.whatsapp-float:hover {
+    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45);
+    transform: translateY(-2px) scale(1.06);
+}
+.whatsapp-float svg {
+    width: 28px;
+    height: 28px;
+    fill: #fff;
+}
+@media (max-width: 480px) {
+    .whatsapp-float { width: 50px; height: 50px; right: 16px; bottom: 16px; }
+    .whatsapp-float svg { width: 25px; height: 25px; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   v2.0.0 — Contrast, Lab, terminal map, floating toggle, footer
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Floating theme toggle — bottom right, fades on scroll ────────── */
+.theme-toggle--float {
+    position: fixed;
+    right: 2rem;
+    bottom: 2rem;
+    z-index: 90;
+    width: 42px;
+    height: 42px;
+    background: rgba(10,10,10,0.72);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border-color: rgba(236,106,60,0.4);
+    color: var(--text-main);
+    transition: opacity 0.45s ease, transform 0.45s ease, color 0.2s, border-color 0.2s, background 0.3s;
+}
+.theme-toggle--float svg { width: 17px; height: 17px; }
+.theme-toggle--float:hover { border-color: var(--accent); color: var(--accent); }
+.theme-toggle--float.hidden { opacity: 0; transform: translateY(14px) scale(0.9); pointer-events: none; }
+[data-theme="light"] .theme-toggle--float { background: rgba(245,242,237,0.78); border-color: rgba(236,106,60,0.45); }
+@media (max-width: 768px) { .theme-toggle--float { right: 1.1rem; bottom: 5.5rem; width: 38px; height: 38px; } }
+
+/* Simplified country buttons */
+/* Fixed width — stays the same size regardless of how wide the column is;
+   only the readout box below is meant to grow with the extra space. */
+.city-cards { grid-template-columns: 1fr 1fr; gap: 0.4rem; max-width: 420px; }
+.city-card {
+    display: flex; align-items: center; gap: 0.6rem;
+    padding: 0.7rem 0.9rem;
+    text-align: left; font: inherit; width: 100%;
+    border: 1px solid var(--border-color); background: transparent;
+    color: inherit; cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    /* iOS Safari: without this, a tap with any tiny finger movement
+       (the norm, not the exception, on touchscreens) can register as
+       a text-selection drag instead of a tap — the button's own click
+       handler never fires, and iOS's long-press callout (Look Up /
+       Translate / Share / Data-Detector quick actions) opens instead.
+       Confirmed live: tapping a city-card intermittently selected its
+       label text rather than activating the button. */
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+.city-dot {
+    width: 7px; height: 7px; flex-shrink: 0;
+    background: var(--accent2); transform: rotate(45deg);
+    transition: background 0.2s, box-shadow 0.2s;
+}
+.city-card[data-type="hq"] .city-dot { background: var(--accent); }
+.city-card:hover .city-dot,
+.city-card.active .city-dot { box-shadow: 0 0 10px currentColor; }
+.city-card .city-card-name { margin-bottom: 0; }
+
+/* One reusable type role for every country/city label in Team &
+   Network's map cards — replaces the old binding to --font-meta
+   (12px, shared with unrelated micro-copy elsewhere) so this doesn't
+   float with whatever that token does, and so there's a single place
+   controlling it instead of two rules (.city-card-name here plus the
+   old override above) touching the same size. Deliberately not a
+   clamp: a closed 1rem across every card, city, partner type and
+   active state, using the height the card already gives it. */
+.team-location-label {
+    font-size: var(--type-team-location);
+    line-height: 1.3;
+    font-weight: 600;
+    letter-spacing: var(--ls-meta);
+}
+
+/* Globe hover/pinned tooltip (built in main.js's showTooltipAt) — the
+   name line used to be a hardcoded inline font-size:0.6rem, a third
+   place sizing a country name independently of .team-location-label
+   and .readout-head. Color/transform stay their own class since the
+   shared role only owns size/line-height/weight/tracking. */
+.map-tooltip-name { color: var(--accent); text-transform: uppercase; }
+.map-tooltip-role { color: var(--text-muted); font-size: var(--font-meta); margin-top: 0.2rem; }
+
+/* ── Terminal readout under the globe — max 2 lines, bigger ───────── */
+.map-readout {
+    display: flex; align-items: flex-start; gap: 0.65rem;
+    width: 100%;
+    margin-top: 0.75rem;
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--border-color);
+    border-left: 2px solid var(--accent);
+    background: rgba(0,0,0,0.28);
+    font-family: var(--font-mono);
+    font-size: var(--font-body-sm);
+}
+[data-theme="light"] .map-readout { background: rgba(0,0,0,0.05); }
+.readout-prompt { color: var(--accent); flex-shrink: 0; font-weight: 700; }
+.readout-body   { color: var(--text-muted); }
+.readout-caret  { flex-shrink: 0; color: var(--accent); animation: caretBlink 1.05s step-end infinite; }
+@keyframes caretBlink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+
+/* ── Lab section ─────────────────────────────────────────────────── */
+.lab { position: relative; border-top: 1px solid var(--border-color); }
+.lab::before {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background-image: repeating-linear-gradient(0deg, rgba(236,106,60,0.045) 0 1px, transparent 1px 3px);
+}
+.lab .container { position: relative; z-index: 1; }
+/* ── Lab gallery — same ag-gallery/ag-panel accordion as Selected Work,
+   just shorter so the 3 panels read as horizontal/landscape frames
+   instead of the tall vertical strips used there. ─────────────────── */
+/* Safari bug, localized to Lab only: .ag-panel combines flex-grow
+   (animated via JS on activate/hover), perspective on the gallery and
+   transform-style:preserve-3d + rotateY on the inactive panels. WebKit
+   has a long-documented bug where a 3D-transformed flex child can
+   paint at its untransformed intrinsic width instead of its
+   flex-computed track width, breaking out of the row. Selected Work
+   never shows it in practice — 7 narrow inactive panels leave too
+   little width per panel for the miscalculation to be visible — but
+   Lab's 3 wide panels make it obvious. Rather than touch the shared
+   .ag-gallery/.ag-panel rules (which would also change Selected Work),
+   .lab-gallery gets its own hard width cap + clip: whatever WebKit
+   miscalculates internally, the gallery itself can never render wider
+   than its container or push the page into horizontal overflow. Hover
+   / click / the accordion's flex-grow and rotateY are untouched — this
+   only bounds the outer box. */
+.lab-gallery {
+    max-width: 100%;
+    overflow: hidden;
+}
+@media (min-width: 521px) {
+    .lab-gallery { height: 320px; }
+}
+
+.lab-panel-idx {
+    position: absolute; top: 14px; left: 16px; z-index: 2;
+    font-family: var(--font-mono);
+    font-size: var(--font-meta); letter-spacing: var(--ls-meta);
+    color: rgba(255,255,255,0.55);
+    pointer-events: none;
+}
+
+.lab-panel-info {
+    position: absolute; left: 18px; right: 18px; bottom: 16px; z-index: 2;
+    display: flex; align-items: flex-end; gap: 10px;
+    pointer-events: none;
+}
+
+.lab-panel-body {
+    display: flex; flex-direction: column; gap: 0.45rem;
+    min-width: 0;
+    opacity: 0; transform: translateX(-10px);
+    transition: opacity 0.3s ease 0.06s, transform 0.3s ease 0.06s;
+}
+.ag-panel--active .lab-panel-body { opacity: 1; transform: translateX(0); }
+
+.lab-status {
+    align-self: flex-start;
+    font-family: var(--font-mono);
+    font-size: var(--font-meta); letter-spacing: var(--ls-kicker); text-transform: uppercase;
+    color: var(--accent2); border: 1px solid currentColor;
+    background: rgba(82, 213, 204, 0.12);
+    padding: 0.22rem 0.55rem;
+}
+.lab-status[data-status="COMPLETED"] { color: var(--accent); background: rgba(238, 109, 62, 0.12); }
+
+.lab-panel-name {
+    color: #fff;
+    font-size: var(--font-card-title); font-weight: 600; line-height: var(--lh-ui);
+    text-shadow: 0 1px 8px rgba(0,0,0,0.6);
+}
+
+.lab-panel-desc {
+    color: rgba(244,241,236,0.82);
+    font-size: var(--font-body-sm); line-height: var(--lh-ui);
+    max-width: 48ch;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+    /* full text, wraps as needed — the panel has room and nothing should clip */
+}
+
+/* ── Footer ──────────────────────────────────────────────────────── */
+/* Three-column grid, not flex space-between: an auto-sized middle
+   column flanked by two equal 1fr columns always sits at the true
+   horizontal center of this row, regardless of how the left/right
+   content's widths compare — no manual margin/offset needed (same
+   technique as the nav's centered globe icon). */
+.site-footer-inner {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+}
+.footer-links { justify-self: end; }
+.footer-mail {
+    background: none; border: none; padding: 0; font: inherit;
+    color: var(--text-muted); cursor: pointer; transition: color 0.2s;
+    /* Its label IS an email address — exactly what iOS's Data Detector
+       callout ("Create Email" / mail-app chooser) looks for on a
+       selected text run. Same fix as .city-card: without this, an
+       imprecise tap can select the text and trigger that OS sheet
+       instead of this button's own click handler (which opens the
+       in-page contact modal). */
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+.footer-mail:hover { color: var(--accent); }
+/* Copyright, dev credit and mail all share .site-footer's own
+   font-size/color — no per-block override left to keep in sync. */
+.footer-dev-link { color: inherit; text-decoration: none; transition: color 0.2s; }
+.footer-dev-link:hover { color: var(--accent); }
+@media (max-width: 768px) {
+    .site-footer-inner {
+        grid-template-columns: 1fr;
+        justify-items: center;
+        gap: 0.6rem;
+        text-align: center;
+    }
+    .footer-links { justify-self: center; }
+}
+
+/* ── Contact modal — Tangram diagonal geometry ───────────────────── */
+.contact-modal {
+    clip-path: var(--clip-card);
+    border-left: 2px solid var(--accent);
+    padding: 3rem 3.25rem 2.75rem;
+}
+.contact-modal-mark { margin-bottom: 1.5rem; }
+.contact-modal-mark img { height: 34px; width: auto; display: block; }
+/* Modal keeps a light panel in light mode — invert so the mark stays legible */
+[data-theme="light"] .contact-modal-mark img { filter: invert(1) hue-rotate(180deg); }
+.contact-modal-option { clip-path: var(--clip-btn); }
+.contact-modal-close { z-index: 2; }
+@media (max-width: 768px) { .contact-modal { --ch-lg: 18px; padding: 2.5rem 2rem 2rem; } }
+
+/* ── Director modal ──────────────────────────────────────────────── */
+.director-link {
+    background: none; border: none; padding: 0; font: inherit;
+    text-transform: inherit; letter-spacing: inherit;
+    color: var(--accent); cursor: pointer; transition: opacity 0.2s;
+}
+.director-link:hover { opacity: 0.75; }
+
+.dir-modal-overlay {
+    position: fixed; inset: 0; z-index: 220;
+    display: flex; align-items: center; justify-content: center;
+    padding: 1.5rem;
+    background: rgba(0,0,0,0.82); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+}
+.dir-modal-overlay.open { opacity: 1; pointer-events: all; }
+[data-theme="light"] .dir-modal-overlay { background: rgba(180,175,165,0.82); }
+
+.dir-modal {
+    display: grid; grid-template-columns: 240px 1fr;
+    max-width: 720px; width: 100%;
+    background: #141414; border: 1px solid var(--border-color);
+    border-left: 2px solid var(--accent);
+    clip-path: var(--clip-card);
+    position: relative;
+    transform: translateY(18px); transition: transform 0.35s ease;
+}
+.dir-modal-overlay.open .dir-modal { transform: translateY(0); }
+[data-theme="light"] .dir-modal { background: #EDE9E3; }
+
+.dir-modal-close {
+    position: absolute; top: 0.9rem; right: 1.1rem; z-index: 3;
+    background: none; border: none; color: var(--text-muted);
+    font-size: 1.5rem; line-height: 1; cursor: pointer; transition: color 0.2s;
+}
+.dir-modal-close:hover { color: var(--accent); }
+
+.dir-modal-photo { position: relative; display: block; overflow: hidden; background: #202020; }
+.dir-modal-photo img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+    filter: grayscale(1) contrast(1.08);
+    transition: filter 0.35s ease, transform 0.5s ease;
+}
+.dir-modal-photo:hover img { filter: grayscale(0) contrast(1.05); transform: scale(1.04); }
+.dir-modal-photo-cta {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    padding: 0.7rem 0.85rem;
+    background: linear-gradient(to top, rgba(0,0,0,0.92), transparent);
+    font-family: var(--font-mono);
+    font-size: 0.55rem; letter-spacing: 0.08em; text-transform: uppercase;
+    color: #F4F1EC; opacity: 0; transition: opacity 0.3s ease;
+}
+.dir-modal-photo:hover .dir-modal-photo-cta { opacity: 1; }
+
+.dir-modal-body { padding: 2.5rem 2.5rem 2.25rem; }
+.dir-modal-eyebrow {
+    margin-bottom: 0.9rem;
+}
+.dir-modal-name { font-family: var(--font-display), var(--font-main); font-size: 2rem; color: var(--text-main); line-height: 1; }
+.dir-modal-sub  { font-size: var(--font-body-sm); color: var(--text-muted); margin-top: 0.3rem; }
+.dir-modal-role {
+    display: inline-block; margin-top: 0.9rem;
+    font-family: var(--font-mono);
+    font-size: 0.55rem; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--accent2); border: 1px solid currentColor; padding: 0.25rem 0.55rem;
+}
+.dir-modal-bio { color: var(--text-muted); font-size: var(--font-body); line-height: var(--lh-body); margin: 1.4rem 0 1.75rem; }
+.dir-modal-cta {
+    display: inline-block; padding: 0.7rem 1.5rem;
+    background: var(--accent); color: #0d0d0d;
+    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+    clip-path: var(--clip-btn); transition: background 0.2s, color 0.2s;
+}
+.dir-modal-cta:hover { background: #fff; color: #0d0d0d; }
+
+@media (max-width: 640px) {
+    .dir-modal { grid-template-columns: 1fr; --ch-lg: 18px; max-height: 88vh; overflow-y: auto; }
+    .dir-modal-photo { height: 210px; }
+    .dir-modal-body { padding: 1.75rem 1.5rem 1.5rem; }
+    .dir-modal-name { font-size: 1.6rem; }
+}
+
+/* ── Hero reveal — slowed 3.5x for a deliberate entrance ─────────── */
+.hero-reveal.in { transition: opacity 2.4s cubic-bezier(0.22,0.61,0.36,1), transform 2.4s cubic-bezier(0.22,0.61,0.36,1); }
+
+/* ── Team responsive: map dominates on mobile/tablet ──────────────── */
+@media (max-width: 960px) {
+    .team-split { grid-template-columns: 1fr; }
+    .team-map-container { min-height: auto; }
+    .globe-canvas { width: min(88vw, 520px); }
+    .city-cards { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 540px) {
+    .city-cards { grid-template-columns: 1fr 1fr; }
+    .globe-canvas { width: min(92vw, 420px); }
+    .map-readout  { font-size: 0.64rem; }
+    .readout-head { min-width: 9.5rem; }
+}
+
+/* Readout: name+role stays fixed-width so text always starts at the same
+   spot; description wraps up to 4 lines, then clips — the box never
+   grows or shrinks, height is reserved even at the idle state. A fixed
+   height (not max-height) only actually reserves space on a block box —
+   .readout-body is a <span> in the markup, so it needs display:block
+   for that height/overflow to take effect at all. */
+.readout-body {
+    display: block;
+    line-height: calc(1.35rem + 0.5px);
+    height: calc(5.4rem + 2px);   /* 4 lines */
+    overflow: hidden;
+}
+/* Country name in the globe's terminal readout — this is the box that
+   was actually meant to get the bigger label (the city-cards grid got
+   fixed too, and keeps .team-location-label, but this readout is the
+   one with real spare height to use). Same shared role, same 1rem,
+   not a size of its own. */
+.readout-head {
+    display: inline-block;
+    min-width: 15rem;
+    margin-right: 0.65rem;
+    color: var(--accent2);
+    text-transform: uppercase;
+}
+.map-readout[data-type="hq"] .readout-head { color: var(--accent); }
+.readout-text { color: var(--text-muted); }
+
+/* Globe column: no longer carries the readout, so centre it on its own */
+.team-map-container { align-self: center; }
+
+/* Desktop-only: the world is a full scene, centered on #team as a
+   whole — not sized or vertically anchored to the text column.
+   #team gets a real viewport-based height budget; .team-split inherits
+   that budget minus the section's own top/bottom padding (needed so
+   the grid row has a real height for align-content:stretch to work
+   with — grid rows don't grow to fill a container's min-height on
+   their own). .team-left keeps its default align-items:start — this
+   only touches align-self for the map column, so the text/city-cards
+   side is untouched and still sized to its own content.
+   .team-map-container itself: align-self:stretch first fills the grid
+   row (.team-split's inner height), then negative block margins equal
+   to --section-padding bleed it out through the section's own padding
+   on both sides — so its rendered box spans #team's FULL height (row
+   + both paddings), not just the row. Its existing flex centering
+   (align-items/justify-content:center, unchanged) then centers
+   .globe-ascii inside that full-height box. Same 960px cut the
+   mobile/tablet rules above already use — not a new breakpoint. */
+@media (min-width: 961px) {
+    .team {
+        min-height: 100svh;
+    }
+    .team-split {
+        /* Wider map column so the globe has enough width to stay
+           circular without being clamped by a narrower, 50/50 track. */
+        grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+        min-height: calc(100svh - 2 * var(--section-padding));
+        align-content: stretch;
+    }
+    .team-map-container {
+        align-self: stretch;
+        margin-block: calc(-1 * var(--section-padding));
+    }
+    .team-left {
+        align-self: center;
+    }
+    /* .team-map-container is display:flex with align-items:center, so
+       without an explicit width .globe-ascii shrinks to its own
+       content instead of filling the column — which is why the
+       canvas's 100% was resolving against 328px instead of the real
+       ~625px column width. */
+    .globe-ascii {
+        width: 100%;
+        height: auto;
+    }
+    .globe-canvas {
+        /* Width and height are never computed independently — a
+           locked 1:1 aspect-ratio is the single source of the box's
+           shape, so it can never come out non-square. */
+        width: 100%;
+        max-width: 650px;
+        height: auto;
+        aspect-ratio: 1 / 1;
+        object-fit: contain;
+    }
+}
+
+/* iMac-class cap (1600×1080-class screens): the 2K block below only
+   engages at min-height:1200px, so viewports in the 1000-1199px tall
+   range (e.g. 1600×1080) still ran on the bare 100svh budget above —
+   ~1080px tall with excess top/bottom air. 900px is a fixed ceiling
+   here for the same reason 1120px is fixed below: it only engages
+   once min-width/min-height confirm the screen is genuinely large,
+   and max-height:1199px keeps it from also firing on true 2K screens
+   (those get the taller 1120px cap instead). .team-left's
+   align-self:center and .team-map-container's bleed/centering come
+   from the ≥961px block above and are untouched here; .globe-canvas
+   keeps its 650px max-width from that same block, so the globe
+   doesn't grow OR shrink — only the section's own height budget
+   shrinks around it. */
+@media (min-width: 1500px) and (min-height: 1000px) and (max-height: 1199px) {
+    .team {
+        min-height: min(100svh, 900px);
+    }
+
+    .team-split {
+        min-height: calc(900px - 2 * var(--section-padding));
+    }
+}
+
+/* Large-desktop cap (2560×1440-class screens): above this size, the
+   100svh budget .hero/.team use to fit smaller viewports stops
+   mapping to "fills the screen" and starts mapping to "1440px of
+   mostly-empty air" instead — measured live at 2560×1440: .hero and
+   #team both rendered at ~1440px tall, and .globe-canvas sat capped
+   at its 650px max-width even though its column (.team-map-container)
+   had 800px+ to give it. 1120px is a fixed ceiling, not a ratio, so
+   it only engages once the viewport is genuinely oversized — guarded
+   by min-width AND min-height together so 1680×950 and 1440×900 (both
+   under 1200px tall) never see it. .team-left keeps its own
+   align-self:center from the block above, so shrinking #team's height
+   budget re-centers the text column with it; .team-map-container's
+   existing bleed/centering is untouched, it just has a shorter box to
+   fill. Lifting .globe-canvas's max-width here (not lowering it
+   elsewhere) is what lets it actually use that reclaimed column
+   width — aspect-ratio:1/1 above still keeps it square either way. */
+@media (min-width: 1600px) and (min-height: 1200px) {
+    .hero {
+        min-height: min(100svh, 1120px);
+    }
+
+    .team {
+        min-height: min(100svh, 1120px);
+    }
+
+    .team-split {
+        min-height: calc(1120px - 2 * var(--section-padding));
+    }
+
+    .globe-canvas {
+        max-width: 100%;
+    }
+}

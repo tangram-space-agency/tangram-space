@@ -1,0 +1,22 @@
+# OS
+.DS_Store
+
+# Legacy/unused
+dist/
+
+# Orphaned assets (not referenced by any HTML/CSS/JS — kept locally, not backed up)
+assets/favicon-Tangram-isoLogo.png
+assets/images/cases/bybit-billboard.png
+
+# Local tooling / secrets (defensive — none currently present)
+.env
+.env.*
+*.pem
+*.key
+node_modules/
+*.log
+lighthouse-report*.json
+.claude/
+.codex/
+CLAUDE.md
+AGENTS.md
