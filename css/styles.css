@@ -726,17 +726,82 @@ a:hover { color: var(--accent); }
    simulated against the real object-fit:cover math per source image,
    not eyeballed on the live page. Filename-keyed so it applies
    identically across en/es/zh without per-language markup. Bitcoin
-   Conference and Card & Pay Launch center-crop correctly and are left
-   alone. */
+   Conference center-crops correctly and is left alone. */
 .ag-media img[src*="volvo.jpg"]            { object-position: 50% 35%; } /* keeps the full drummer trio's faces; default center cut the lead drummer through the eyes */
 .ag-media img[src*="bybit-poker.jpg"]      { object-position: 50% 35%; } /* keeps the BYBIT neon sign; default center showed only chairs, no branding */
 .ag-media img[src*="bybit-enterview.jpg"]  { object-position: 50% 30%; } /* keeps both faces; default center cropped both heads off at the neck */
 .ag-media img[src*="bybit-pizza-car.jpg"]  { object-position: 50% 82%; } /* brings the Bybit car fully into frame, higher up in the shot */
-/* Default center-crop showed too much sky above the billboards, with
-   the sharper, more legible sign sitting off to the right. Scaled up
-   20% and re-anchored toward that sign so the extra zoom crops away
-   sky/edges instead of the subject. */
-.ag-media img[src*="bybit-billboard.jpg"]  { transform: scale(1.2); transform-origin: 66% 60%; }
+/* Photo is landscape (1672×941, sunset shot) but the panel crops to a
+   narrow-tall strip, so default center-crop was mostly empty sky and
+   missed the sign. Anchored right toward the BYBIT wordmark/price. */
+.ag-media img[src*="bybit-billboard.jpg"]  { object-position: 63% 48%; }
+/* Card & Pay Launch is a 3:2 split collage (bright signed BYBIT wall left,
+   dark neon sign + crowd right). Row layout: collapsed strips crop by
+   width, so x picks the neon sign; the open panel frames both halves.
+   Vertical accordion: the caption sits on the bright wall, so the open
+   panel is dimmed and framed on the sign, closed bands keep the wall
+   logo, and phones (open panel crops by height) show the dark right
+   half. Eases with the panel's own grow. */
+.ag-media img[src*="bybit-card.jpg"] {
+    object-position: 60% 50%;
+    transition: object-position 0.6s cubic-bezier(0.16,1,0.3,1), filter 0.6s ease;
+}
+.ag-panel--active .ag-media img[src*="bybit-card.jpg"] { object-position: 10% 50%; }
+@media (max-width: 1100px) {
+    .ag-media img[src*="bybit-card.jpg"] { object-position: 50% 35%; }
+    .ag-panel--active .ag-media img[src*="bybit-card.jpg"] { object-position: 50% 20%; filter: brightness(0.6); }
+}
+@media (max-width: 520px) {
+    .ag-panel--active .ag-media img[src*="bybit-card.jpg"] { object-position: 100% 20%; }
+}
+/* Perfect Trades is a square cover (wordmark top-left, hand mid-left).
+   Row layout: collapsed strips crop by width, so x picks the hand; the
+   wide active panel crops by height, so y keeps the wordmark in frame.
+   Vertical accordion: the panel is a short, wide band, so tablets frame
+   the wordmark above the caption and phones (caption fills the panel)
+   frame the hand and screen once the panel is open; closed bands keep
+   the wordmark. Eases with the panel's own grow. */
+.ag-media img[src*="perfect-trades.jpg"] {
+    object-position: 34% 20%;
+    transition: object-position 0.6s cubic-bezier(0.16,1,0.3,1);
+}
+@media (max-width: 1100px) {
+    .ag-media img[src*="perfect-trades.jpg"] { object-position: 50% 10%; }
+}
+@media (max-width: 520px) {
+    .ag-panel--active .ag-media img[src*="perfect-trades.jpg"] { object-position: 50% 100%; }
+}
+/* La Templanza is a 4:3 laptop mockup (screen center-right). Row layout:
+   collapsed strips crop by width, so x picks the screen. Vertical
+   accordion: the panel is a short, wide band, so y frames the hero
+   headline above the caption. */
+.ag-media img[src*="la-templanza.jpg"] { object-position: 63% 50%; }
+@media (max-width: 1100px) {
+    .ag-media img[src*="la-templanza.jpg"] { object-position: 50% 45%; }
+}
+/* Light cover under a caption that fills the whole phone panel: dim it so
+   the white text keeps its contrast. */
+@media (max-width: 520px) {
+    .ag-media img[src*="la-templanza.jpg"] { filter: brightness(0.6); }
+}
+/* Corporate Event Branding is a dark 1.8:1 terrace scene (backdrop wall
+   left, neon OKX sign and lit letters right). Row layout: collapsed
+   strips crop by width, so x picks the neon sign; the open panel frames
+   wall, sign and letters together. Vertical accordion: y keeps the sign
+   and wall in the band, and phones (open panel crops by height) slide
+   right to the sign and letters. Eases with the panel's own grow. */
+.ag-media img[src*="okx-branding-event.jpg"] {
+    object-position: 65% 50%;
+    transition: object-position 0.6s cubic-bezier(0.16,1,0.3,1);
+}
+.ag-panel--active .ag-media img[src*="okx-branding-event.jpg"] { object-position: 45% 50%; }
+@media (max-width: 1100px) {
+    .ag-media img[src*="okx-branding-event.jpg"],
+    .ag-panel--active .ag-media img[src*="okx-branding-event.jpg"] { object-position: 50% 20%; }
+}
+@media (max-width: 520px) {
+    .ag-panel--active .ag-media img[src*="okx-branding-event.jpg"] { object-position: 60% 20%; }
+}
 
 .ag-overlay {
     position: absolute;
@@ -773,26 +838,27 @@ a:hover { color: var(--accent); }
     .ag-panel { transform: none !important; min-height: 48px; }
 }
 
-/* Selected Work has 8 panels vs. Lab's 3. main.js splits gallery width
-   0.52 / (0.48 ÷ 7 rest) between the active panel and each inactive
-   sliver — at 8 panels that's ~6% of the gallery per inactive panel,
+/* Selected Work has 11 panels vs. Lab's 5. main.js splits gallery width
+   0.52 / (0.48 ÷ 10 rest) between the active panel and each inactive
+   sliver — at 11 panels that's ~5% of the gallery per inactive panel,
    which drops under a 44px touch target well before 520px (measured:
-   ~646px, using the row's real gutter/gap). Lab's 3-panel math (~24%
-   per inactive panel) never has this problem, so it keeps the 520px
-   cutover above and doesn't need this override.
-   Height budget: 7 collapsed panels pin to their 48px min-height floor
-   (336px) + 7×8px gaps (56px) = 392px fixed before the active panel
+   40px at a 900px viewport with 10 panels; with 11 the same math puts
+   the crossover near ~1070px, using the row's real gutter/gap; 1100px
+   keeps a margin). Lab's 5-panel math (~12% per inactive panel) never
+   has this problem, so it keeps the 520px cutover above and doesn't
+   need this override.
+   Height budget: 10 collapsed panels pin to their 48px min-height floor
+   (480px) + 10×8px gaps (80px) = 560px fixed before the active panel
    sees a single pixel — at the old 480px total that left only ~88px
    for the active panel, not enough to render title + description
    without clipping (confirmed live: measured 88px rendered height).
-   600px gives the active panel ~208px, enough for a 1-line title plus
-   a 3-line description with margin. Lab's own height (320px @ ≥521px,
-   480px below it) is untouched — its 3-panel math never hits this
-   floor. */
-@media (max-width: 660px) {
+   816px gives the active panel ~256px, enough for a 2-line title plus
+   a 6-line description (the longest, La Templanza) with margin. Lab
+   sizes its own phone height next to .lab-gallery. */
+@media (max-width: 1100px) {
     .portfolio .ag-gallery {
         flex-direction: column;
-        height: 600px;
+        height: 816px;
         perspective: none;
     }
     .portfolio .ag-panel { transform: none !important; min-height: 48px; }
@@ -1560,7 +1626,7 @@ a:hover { color: var(--accent); }
 }
 .lab .container { position: relative; z-index: 1; }
 /* ── Lab gallery — same ag-gallery/ag-panel accordion as Selected Work,
-   just shorter so the 3 panels read as horizontal/landscape frames
+   just shorter so the panels read as horizontal/landscape frames
    instead of the tall vertical strips used there. ─────────────────── */
 /* Safari bug, localized to Lab only: .ag-panel combines flex-grow
    (animated via JS on activate/hover), perspective on the gallery and
@@ -1570,7 +1636,7 @@ a:hover { color: var(--accent); }
    flex-computed track width, breaking out of the row. Selected Work
    never shows it in practice — 7 narrow inactive panels leave too
    little width per panel for the miscalculation to be visible — but
-   Lab's 3 wide panels make it obvious. Rather than touch the shared
+   Lab's wide panels make it obvious. Rather than touch the shared
    .ag-gallery/.ag-panel rules (which would also change Selected Work),
    .lab-gallery gets its own hard width cap + clip: whatever WebKit
    miscalculates internally, the gallery itself can never render wider
@@ -1583,6 +1649,22 @@ a:hover { color: var(--accent); }
 }
 @media (min-width: 521px) {
     .lab-gallery { height: 320px; }
+}
+/* Phone height for 5 panels: the open one gets 0.52 × (520 − 4×8 gaps)
+   ≈ 254px, enough for the status chip + title + description; the four
+   closed ones get ~58px each, above the 48px floor. */
+@media (max-width: 520px) {
+    .lab-gallery { height: 520px; }
+}
+
+/* Dorsal cover is a 2.5:1 banner with the small logo top-left and the
+   phone center-right. Anchored fully left so the logo is in frame in
+   every panel state (collapsed strips included) and the hoop stays out.
+   On phones the active panel is near-square and its caption fills the
+   whole height, so it would sit on the logo: frame the phone there. */
+.lab-panel .ag-media img[src*="dorsal-app.jpg"] { object-position: 0% 50%; }
+@media (max-width: 520px) {
+    .lab-panel .ag-media img[src*="dorsal-app.jpg"] { object-position: 60% 50%; }
 }
 
 .lab-panel-idx {

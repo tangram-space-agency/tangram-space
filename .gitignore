@@ -20,3 +20,7 @@ lighthouse-report*.json
 .codex/
 CLAUDE.md
 AGENTS.md
+
+# Galería Bybit Trading Show: versiones HD y ZIP (146 MB c/u) viven en el disco externo y en S3, no en git (GitHub rechaza archivos >100 MB)
+bybit-tradingshow/d/
+bybit-tradingshow/*.zip

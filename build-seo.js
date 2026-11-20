@@ -15,7 +15,7 @@ if (!config.environments[env]) {
   process.exit(1);
 }
 const { origin, indexable } = config.environments[env];
-const { languages, xDefault, organization, ogImagePath } = config;
+const { languages, xDefault, organization, ogImagePath, analytics } = config;
 
 const absUrl = (langKey) => origin + languages[langKey].path;
 
@@ -33,20 +33,71 @@ function setMetaContent(html, attr, value) {
   return html.replace(re, `$1${value}$2`);
 }
 
-function organizationSchema(pageUrl) {
-  const data = {
-    '@context': 'https://schema.org',
+// Office/partner locations come from the page's own .city-card buttons (data-* attributes
+// shown in the map readout), so the JSON-LD always says exactly what the page says.
+const CITY_META = {
+  baires: { country: 'AR' },
+  dubai: { country: 'AE', locality: 'Dubai' },
+  mexico: { country: 'MX' },
+  iberia: { country: 'ES' },
+  brasil: { country: 'BR' },
+  colombia: { country: 'CO' }
+};
+function parseCities(html) {
+  const unescape = (s) => s.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+  const out = [];
+  const re = /<button type="button" class="city-card" ([^>]*)>\s*<span class="city-dot"><\/span><span class="city-card-name[^"]*">([^<]*)<\/span>/g;
+  let m;
+  while ((m = re.exec(html))) {
+    const a = Object.fromEntries([...m[1].matchAll(/(data-[a-z-]+)="([^"]*)"/g)].map((x) => [x[1], unescape(x[2])]));
+    const meta = CITY_META[a['data-city']];
+    if (!meta || !a['data-text']) continue;
+    const address = { '@type': 'PostalAddress', addressCountry: meta.country };
+    if (meta.locality) address.addressLocality = meta.locality;
+    out.push({
+      '@type': 'Place',
+      name: unescape(m[2]).trim(),
+      description: a['data-text'],
+      address,
+      additionalProperty: { '@type': 'PropertyValue', name: 'Role', value: a['data-role'] }
+    });
+  }
+  return out;
+}
+
+function organizationSchema(lang, cities) {
+  const orgId = `${origin}/#organization`;
+  const org = {
     '@type': 'Organization',
+    '@id': orgId,
     name: organization.name,
-    url: pageUrl,
+    url: `${origin}/`,
     logo: origin + organization.logoPath
   };
-  if (organization.email) data.email = organization.email;
-  if (organization.sameAs && organization.sameAs.length) data.sameAs = organization.sameAs;
+  if (organization.alternateName) org.alternateName = organization.alternateName;
+  if (organization.description) org.description = organization.description[lang] || organization.description.en;
+  if (organization.areaServed) org.areaServed = organization.areaServed;
+  if (organization.knowsAbout) org.knowsAbout = organization.knowsAbout;
+  if (organization.knowsLanguage) org.knowsLanguage = organization.knowsLanguage;
+  if (organization.email) {
+    org.email = organization.email;
+    org.contactPoint = ['sales', 'partnerships'].map((contactType) => ({ '@type': 'ContactPoint', contactType, email: organization.email, availableLanguage: organization.knowsLanguage }));
+  }
+  if (organization.sameAs && organization.sameAs.length) org.sameAs = organization.sameAs;
+  if (cities && cities.length) org.location = cities;
+  const site = {
+    '@type': 'WebSite',
+    '@id': `${origin}/#website`,
+    url: `${origin}/`,
+    name: organization.name,
+    inLanguage: Object.values(languages).map((l) => l.hreflang),
+    publisher: { '@id': orgId }
+  };
+  const data = { '@context': 'https://schema.org', '@graph': [org, site] };
   return `    <script type="application/ld+json">\n${JSON.stringify(data, null, 4)}\n    </script>`;
 }
 
-function buildBlock(pageUrl, { hreflangGroup, schema }) {
+function buildBlock(pageUrl, { hreflangGroup, schema, altLinks, lang, cities }) {
   const lines = [MARKER_START];
   lines.push(`    <link rel="canonical" href="${pageUrl}">`);
   if (hreflangGroup) {
@@ -55,10 +106,19 @@ function buildBlock(pageUrl, { hreflangGroup, schema }) {
     }
     lines.push(`    <link rel="alternate" hreflang="x-default" href="${absUrl(xDefault)}">`);
   }
+  if (altLinks) {
+    for (const a of altLinks) lines.push(`    <link rel="alternate" hreflang="${a.hreflang}" href="${a.url}">`);
+  }
   if (!indexable) {
     lines.push('    <meta name="robots" content="noindex, nofollow">');
   }
-  if (schema) lines.push(organizationSchema(pageUrl));
+  if (schema) lines.push(organizationSchema(lang, cities));
+  // Cookieless analytics (Umami): production only, and only once a website id is set.
+  // data-domains makes the script ignore any other host (staging, local previews).
+  const umami = analytics && analytics.umami;
+  if (indexable && umami && umami.websiteId) {
+    lines.push(`    <script defer src="${umami.src}" data-website-id="${umami.websiteId}" data-domains="${new URL(origin).hostname}"></script>`);
+  }
   lines.push(MARKER_END);
   return lines.join('\n');
 }
@@ -66,7 +126,7 @@ function buildBlock(pageUrl, { hreflangGroup, schema }) {
 function applyToFile(relPath, pageUrl, opts) {
   const filePath = path.join(ROOT, relPath);
   let html = fs.readFileSync(filePath, 'utf8');
-  const block = buildBlock(pageUrl, opts);
+  const block = buildBlock(pageUrl, { ...opts, cities: opts.schema ? parseCities(html) : null });
 
   if (MARKER_RE.test(html)) {
     html = html.replace(MARKER_RE, block);
@@ -78,18 +138,56 @@ function applyToFile(relPath, pageUrl, opts) {
 
   if (opts.socialMeta) {
     html = setMetaContent(html, 'property="og:url"', pageUrl);
-    html = setMetaContent(html, 'property="og:image"', origin + ogImagePath);
-    html = setMetaContent(html, 'name="twitter:image"', origin + ogImagePath);
+    const img = opts.ogImagePath || ogImagePath;
+    html = setMetaContent(html, 'property="og:image"', origin + img);
+    html = setMetaContent(html, 'name="twitter:image"', origin + img);
   }
 
   fs.writeFileSync(filePath, html);
   console.log(`[${env}] updated ${relPath}`);
 }
 
-applyToFile('index.html', absUrl('en'), { hreflangGroup: true, schema: true, socialMeta: true });
-applyToFile('es/index.html', absUrl('es'), { hreflangGroup: true, schema: true, socialMeta: true });
-applyToFile('zh/index.html', absUrl('zh'), { hreflangGroup: true, schema: true, socialMeta: true });
-applyToFile('chevy.html', origin + '/chevy.html', { hreflangGroup: false, schema: false, socialMeta: false });
+applyToFile('index.html', absUrl('en'), { hreflangGroup: true, schema: true, lang: 'en', socialMeta: true });
+applyToFile('es/index.html', absUrl('es'), { hreflangGroup: true, schema: true, lang: 'es', socialMeta: true });
+applyToFile('zh/index.html', absUrl('zh'), { hreflangGroup: true, schema: true, lang: 'zh', socialMeta: true });
+applyToFile('chevy.html', origin + '/chevy.html', { hreflangGroup: false, schema: false, socialMeta: true, ogImagePath: '/assets/images/chevy-photo.jpg' });
+// Event gallery: Spanish page + English page (hreflang pair), each canonical to itself.
+const galleryEs = origin + '/bybit-tradingshow/';
+const galleryEn = origin + '/bybit-tradingshow/en/';
+// Event page (the pitch): same ES/EN pair, links on to the gallery.
+const eventEs = origin + '/tradingshow/';
+const eventEn = origin + '/tradingshow/en/';
+const eventAlts = [{ hreflang: 'es', url: eventEs }, { hreflang: 'en', url: eventEn }, { hreflang: 'x-default', url: eventEs }];
+applyToFile('tradingshow/index.html', eventEs, { hreflangGroup: false, schema: false, socialMeta: true, ogImagePath: '/bybit-tradingshow/og.jpg', altLinks: eventAlts });
+applyToFile('tradingshow/en/index.html', eventEn, { hreflangGroup: false, schema: false, socialMeta: true, ogImagePath: '/bybit-tradingshow/og.jpg', altLinks: eventAlts });
+const galleryAlts = [{ hreflang: 'es', url: galleryEs }, { hreflang: 'en', url: galleryEn }, { hreflang: 'x-default', url: galleryEs }];
+applyToFile('bybit-tradingshow/index.html', galleryEs, { hreflangGroup: false, schema: false, socialMeta: true, ogImagePath: '/bybit-tradingshow/og.jpg', altLinks: galleryAlts });
+applyToFile('bybit-tradingshow/en/index.html', galleryEn, { hreflangGroup: false, schema: false, socialMeta: true, ogImagePath: '/bybit-tradingshow/og.jpg', altLinks: galleryAlts });
+
+
+// --- lastmod: only changes when a page's real content changes ---
+// The hash ignores the environment-specific bits (SEO block, og:url/og:image/twitter:image),
+// so staging/production runs don't register as edits. State lives in sitemap-lastmod.json.
+const crypto = require('crypto');
+const LASTMOD_FILE = path.join(ROOT, 'sitemap-lastmod.json');
+const lastmodState = fs.existsSync(LASTMOD_FILE) ? JSON.parse(fs.readFileSync(LASTMOD_FILE, 'utf8')) : {};
+const today = new Date().toISOString().slice(0, 10);
+function contentHash(relPath) {
+  let html = fs.readFileSync(path.join(ROOT, relPath), 'utf8');
+  html = html.replace(MARKER_RE, '')
+    .replace(/(<meta (?:property="og:url"|property="og:image"|name="twitter:image") content=")[^"]*(")/g, '$1$2');
+  return crypto.createHash('sha256').update(html).digest('hex');
+}
+function lastmodFor(relPath) {
+  const hash = contentHash(relPath);
+  const prev = lastmodState[relPath];
+  if (!prev || prev.hash !== hash) lastmodState[relPath] = { hash, lastmod: today };
+  return lastmodState[relPath].lastmod;
+}
+const LASTMOD_PAGES = ['index.html', 'es/index.html', 'zh/index.html', 'chevy.html', 'tradingshow/index.html', 'tradingshow/en/index.html', 'bybit-tradingshow/index.html', 'bybit-tradingshow/en/index.html'];
+for (const p of LASTMOD_PAGES) lastmodFor(p);
+fs.writeFileSync(LASTMOD_FILE, JSON.stringify(lastmodState, null, 2) + '\n');
+const lm = (relPath) => `    <lastmod>${lastmodState[relPath].lastmod}</lastmod>\n`;
 
 // --- robots.txt ---
 const robots = indexable
@@ -106,10 +204,18 @@ if (indexable) {
       .map(([k, d]) => `    <xhtml:link rel="alternate" hreflang="${d.hreflang}" href="${absUrl(k)}"/>`)
       .concat(`    <xhtml:link rel="alternate" hreflang="x-default" href="${absUrl(xDefault)}"/>`)
       .join('\n');
-    return `  <url>\n    <loc>${absUrl(key)}</loc>\n${alternates}\n    <changefreq>weekly</changefreq>\n    <priority>${key === xDefault ? '1.0' : '0.9'}</priority>\n  </url>`;
+    return `  <url>\n    <loc>${absUrl(key)}</loc>\n${lm(key === 'en' ? 'index.html' : key + '/index.html')}${alternates}\n    <changefreq>weekly</changefreq>\n    <priority>${key === xDefault ? '1.0' : '0.9'}</priority>\n  </url>`;
   }).join('\n');
-  const chevyEntry = `  <url>\n    <loc>${origin}/chevy.html</loc>\n    <changefreq>monthly</changefreq>\n    <priority>0.5</priority>\n  </url>`;
-  const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n        xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${langEntries}\n${chevyEntry}\n</urlset>\n`;
+  const chevyEntry = `  <url>\n    <loc>${origin}/chevy.html</loc>\n${lm('chevy.html')}    <changefreq>monthly</changefreq>\n    <priority>0.5</priority>\n  </url>`;
+  // Event gallery: one URL plus its photos (image sitemap) so Google Images can find them.
+  const galleryDir = path.join(ROOT, 'bybit-tradingshow', 'v');
+  const galleryImgs = fs.existsSync(galleryDir) ? fs.readdirSync(galleryDir).filter((f) => f.endsWith('.webp')).sort() : [];
+  const galleryAltXml = galleryAlts.map((x) => `    <xhtml:link rel="alternate" hreflang="${x.hreflang}" href="${x.url}"/>`).join('\n');
+  const galleryImgXml = galleryImgs.map((f) => `    <image:image><image:loc>${origin}/bybit-tradingshow/v/${f}</image:loc></image:image>`).join('\n');
+  const galleryEntry = [galleryEs, galleryEn].map((loc, i) => `  <url>\n    <loc>${loc}</loc>\n${lm(i === 0 ? 'bybit-tradingshow/index.html' : 'bybit-tradingshow/en/index.html')}${galleryAltXml}\n${i === 0 ? galleryImgXml + '\n' : ''}    <changefreq>monthly</changefreq>\n    <priority>${i === 0 ? '0.6' : '0.5'}</priority>\n  </url>`).join('\n');
+  const eventAltXml = eventAlts.map((x) => `    <xhtml:link rel="alternate" hreflang="${x.hreflang}" href="${x.url}"/>`).join('\n');
+  const eventEntry = [eventEs, eventEn].map((loc, i) => `  <url>\n    <loc>${loc}</loc>\n${lm(i === 0 ? 'tradingshow/index.html' : 'tradingshow/en/index.html')}${eventAltXml}\n    <changefreq>monthly</changefreq>\n    <priority>${i === 0 ? '0.7' : '0.6'}</priority>\n  </url>`).join('\n');
+  const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n        xmlns:xhtml="http://www.w3.org/1999/xhtml"\n        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n${langEntries}\n${chevyEntry}\n${eventEntry}\n${galleryEntry}\n</urlset>\n`;
   fs.writeFileSync(sitemapPath, sitemap);
   console.log(`[${env}] wrote sitemap.xml`);
 } else if (fs.existsSync(sitemapPath)) {

@@ -168,7 +168,7 @@ function attachModalA11y(overlay) {
     function close() { overlay.classList.remove('open'); overlay.setAttribute('aria-hidden', 'true');  a11y.onClose(); }
 
     // All buttons that open the modal
-    document.querySelectorAll('#open-contact-modal, #open-contact-modal-hero, #open-contact-modal-about, .nav-cta-btn, #footer-mail').forEach(btn => {
+    document.querySelectorAll('#open-contact-modal, #open-contact-modal-hero, #open-contact-modal-about, .nav-cta-btn, #footer-mail, [data-open-contact]').forEach(btn => {
         btn && btn.addEventListener('click', e => { e.preventDefault(); open(); });
     });
 
@@ -864,7 +864,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.clearRect(0, 0, W, H);
         const _theme = document.documentElement.dataset.theme;
         if (_theme !== _lastTheme) { _lastTheme = _theme; loadColors(); }
-        ctx.fillStyle = _theme === 'light' ? '#EAE7E1' : '#1c1c1c';
+        ctx.fillStyle = _theme === 'light' ? '#EAE7E1' : '#111111'; // matches --bg-color, so Hero → About reads as one continuous background
         ctx.fillRect(0, 0, W, H);
 
         // update positions

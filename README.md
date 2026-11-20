@@ -36,3 +36,19 @@ Para producción: `./deploy-production.sh` (corre `build-seo.js production`, sin
 `catalog-okx-2026/` es contenido real y publicado (catálogo para un cliente, OKX) que históricamente vivía **solo en los buckets S3**, no en este repo — se agregó acá recién en este backup. Ambos scripts de deploy (`deploy-staging.sh` y `deploy-production.sh`) excluyen explícitamente `catalog-okx-2026/*` de su `--delete`.
 
 **Nunca correr `aws s3 sync --delete` a mano sobre ninguno de los dos buckets sin excluir `catalog-okx-2026/`** — ya pasó una vez (2026-09-23) que un sync sin esa exclusión lo borró de staging; se restauró copiando desde el otro bucket. Si necesitás sincronizar a mano por algún motivo, agregá siempre `--exclude "catalog-okx-2026/*"` o usá los scripts existentes.
+
+## Páginas del evento Bybit Trading Show
+
+- `tradingshow/` (ES) y `tradingshow/en/` (EN): la página del evento (planteo, cifras, cómo funcionó). Es a la que apunta la lámina de Works.
+- `bybit-tradingshow/` (ES) y `bybit-tradingshow/en/` (EN): la galería de fotos (115 fotos, selección múltiple, ZIP). Las versiones `t/` (miniaturas) y `v/` (1800 px) están en el repo; las HD de 4096 px (`d/`) y el ZIP viven en el disco externo y en S3, no en git.
+- Las dos páginas son HTML generado. Los scripts que las generaban (plantillas en Python) ya no existen: **el HTML es hoy la fuente de verdad**, se edita directo.
+- Cada página tiene su par de idiomas con `hreflang`, datos estructurados de evento y de galería, y `BreadcrumbList`.
+
+## SEO, analytics y otros archivos generados
+
+- `build-seo.js` también escribe `lastmod` en el sitemap a partir de `sitemap-lastmod.json`: la fecha solo cambia cuando cambia el contenido real de la página (el hash ignora el bloque de SEO y las URLs de entorno). `sitemap-lastmod.json` no se publica (está excluido de los deploys).
+- Las seis ubicaciones de Team & Network salen de los botones `.city-card` de cada home y se vuelcan al JSON-LD de la organización.
+- Analytics: Umami Cloud (sin cookies). El ID está en `seo.config.json` (`analytics.umami.websiteId`); `build-seo.js` lo inyecta solo en producción y con `data-domains` del dominio de producción.
+- `error.html` es la página 404 (el bucket de producción la usa como documento de error; el de staging todavía apunta a `index.html`).
+- `BingSiteAuth.xml` verifica el sitio en Bing Webmaster Tools; la etiqueta `msvalidate.01` de la home cumple lo mismo. No borrar.
+- Encabezados de seguridad: la política de CloudFront `tangram-security-headers` agrega HSTS, `nosniff` y `Referrer-Policy`. A propósito no restringe iframes: el sitio se embebe en presentaciones.

@@ -10,16 +10,60 @@
     }
   },
   "languages": {
-    "en": { "path": "/", "hreflang": "en" },
-    "es": { "path": "/es/index.html", "hreflang": "es" },
-    "zh": { "path": "/zh/index.html", "hreflang": "zh" }
+    "en": {
+      "path": "/",
+      "hreflang": "en"
+    },
+    "es": {
+      "path": "/es/index.html",
+      "hreflang": "es"
+    },
+    "zh": {
+      "path": "/zh/index.html",
+      "hreflang": "zh"
+    }
   },
   "xDefault": "en",
   "ogImagePath": "/assets/images/og-cover.jpg",
+  "analytics": {
+    "umami": {
+      "src": "https://cloud.umami.is/script.js",
+      "websiteId": "e8d8ad7f-c32f-4de0-8480-7f1101978fed"
+    }
+  },
   "organization": {
     "name": "Tangram",
     "logoPath": "/assets/images/logo.png",
     "email": "info@tangram.space",
-    "sameAs": ["https://www.linkedin.com/company/tangram-marketing-agency"]
+    "sameAs": [
+      "https://www.linkedin.com/company/tangram-marketing-agency"
+    ],
+    "alternateName": [
+      "Tangram Space",
+      "Tangram Agency"
+    ],
+    "description": {
+      "en": "Tangram is a creative production agency based in Latin America, with operations in Europe and Dubai: brand activations, events and content production.",
+      "es": "Tangram es una agencia de producción creativa con base en Latinoamérica y operación en Europa y Dubái: activaciones de marca, eventos y producción de contenido.",
+      "zh": "Tangram 是一家总部位于拉丁美洲、业务覆盖欧洲与迪拜的创意制作公司，提供品牌活动、活动制作与内容制作服务。"
+    },
+    "areaServed": [
+      "Latin America",
+      "Europe",
+      "Middle East"
+    ],
+    "knowsAbout": [
+      "Brand activations",
+      "Events",
+      "Content production",
+      "Branding and design",
+      "Integrated experiences",
+      "Strategic consulting"
+    ],
+    "knowsLanguage": [
+      "en",
+      "es",
+      "zh"
+    ]
   }
 }
